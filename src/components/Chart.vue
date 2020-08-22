@@ -1,14 +1,13 @@
 <template>
-  <div>
+  <div class="white--text c-2">
     I am a chart
   </div>
 </template>
 
 <script>
 export default {
-  name: "Chart",
-}
+  name: "Chart"
+};
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
