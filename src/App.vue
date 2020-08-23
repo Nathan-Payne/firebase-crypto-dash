@@ -19,6 +19,7 @@
       permanent
       absolute
       class="nav-position"
+      right
     >
       <v-list nav dense class="ma-0 pa-0">
         <v-list-item-group active-class="active-link">
