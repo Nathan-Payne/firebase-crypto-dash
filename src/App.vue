@@ -25,9 +25,9 @@
         <v-list-item-group active-class="active-link">
           <v-list-item to="/" exact>
             <v-list-item-icon>
-              <v-icon>mdi-home</v-icon>
+              <v-icon>mdi-view-dashboard</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>Home</v-list-item-title>
+            <v-list-item-title>Dashboard</v-list-item-title>
           </v-list-item>
 
           <v-list-item to="/about" exact>

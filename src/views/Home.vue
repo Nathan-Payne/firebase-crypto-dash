@@ -52,5 +52,6 @@ export default {
 }
 .grid-item {
   height: 100%;
+  padding-top: 1rem;
 }
 </style>
