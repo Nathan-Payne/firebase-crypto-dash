@@ -57,7 +57,7 @@ export default {
         const parsedData = JSON.parse(event.data);
         if (parsedData.stream == "btcusdt@ticker") {
           lastBtcPrice = parseFloat(parsedData.data.c).toFixed(2);
-          btcChange = parseFloat(parsedData.data.P).toFixed(2)
+          btcChange = parseFloat(parsedData.data.P).toFixed(2);
         }
         if (parsedData.stream == "ethusdt@ticker") {
           lastEthPrice = parseFloat(parsedData.data.c).toFixed(2);

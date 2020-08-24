@@ -47,6 +47,9 @@
 </template>
 
 <script>
+import { Chart } from "chart.js";
+Chart.defaults.global.legend.display = false;
+
 export default {
   name: "App",
   data: () => ({
@@ -56,6 +59,9 @@ export default {
 </script>
 
 <style>
+body {
+  overflow: hidden;
+}
 .active-link {
   background-color: #0d7377;
 }

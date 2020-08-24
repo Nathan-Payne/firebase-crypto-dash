@@ -6,8 +6,8 @@
     <section id="ticker-section">
       <data-ticker class="grid-item"></data-ticker>
     </section>
-    <section id="movers-section">
-      <data-movers class="grid-item"></data-movers>
+    <section id="depth-section">
+      <data-depth class="grid-item" :style="depthChartStyles"></data-depth>
     </section>
   </v-container>
 </template>
@@ -16,14 +16,24 @@
 // @ is an alias to /src
 import Chart from "@/components/Chart";
 import Ticker from "@/components/Ticker";
-import Movers from "@/components/Movers";
+import Depth from "@/components/Depth";
 
 export default {
   name: "Home",
   components: {
     "data-chart": Chart,
     "data-ticker": Ticker,
-    "data-movers": Movers
+    "data-depth": Depth
+  },
+  data() {
+    return {
+      depthChartStyles: {
+        width: "500px",
+        maxHeight: "99%",
+        position: "relative",
+        paddingTop: "0"
+      }
+    };
   }
 };
 </script>
@@ -31,27 +41,31 @@ export default {
 <style scoped>
 #chart-section {
   grid-area: ct;
+  height: 50vh;
 }
 #ticker-section {
   grid-area: tk;
 }
-#movers-section {
-  grid-area: mv;
+#depth-section {
+  grid-area: dt;
+  display: flex;
+  justify-content: center;
+  position: relative;
 }
 .container {
   height: 100%;
   padding: 1rem;
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: auto;
+  /* grid-template-columns: repeat(8, 1fr); */
+  /* grid-template-rows: repeat(4, 1fr); */
   grid-template-areas:
     "ct ct ct ct ct ct ct ct"
     "ct ct ct ct ct ct ct ct"
-    "tk tk tk tk mv mv mv mv";
+    "ct ct ct ct ct ct ct ct"
+    "tk tk tk tk dt dt dt dt";
 }
 .grid-item {
-  height: 100%;
   padding-top: 1rem;
 }
 </style>
