@@ -18,25 +18,12 @@ export default {
   name: "Ticker",
   data() {
     return {
-      // btcTicker: "fetching...",
-      // ethTicker: "fetching...",
       headers: [
         { text: "Pair", value: "pair" },
-        { text: "Price", value: "price" },
+        { text: "Price", value: "lastPrice" },
         { text: "% Change", value: "percentChange" }
       ],
-      tickers: [
-        {
-          pair: "BTC/USDT",
-          price: "",
-          percentChange: ""
-        },
-        {
-          pair: "ETH/USDT",
-          price: "",
-          percentChange: ""
-        }
-      ]
+      tickers: this.$store.getters.getTickersArray
     };
   },
   methods: {
@@ -46,38 +33,10 @@ export default {
       } else {
         return { "red-border": true };
       }
-    },
-    getTickers() {
-      let lastBtcPrice, lastEthPrice, btcChange, ethChange;
-      //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
-      const socket = new WebSocket(
-        "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker"
-      );
-      socket.onmessage = event => {
-        const parsedData = JSON.parse(event.data);
-        if (parsedData.stream == "btcusdt@ticker") {
-          lastBtcPrice = parseFloat(parsedData.data.c).toFixed(2);
-          btcChange = parseFloat(parsedData.data.P).toFixed(2);
-        }
-        if (parsedData.stream == "ethusdt@ticker") {
-          lastEthPrice = parseFloat(parsedData.data.c).toFixed(2);
-          ethChange = parseFloat(parsedData.data.P).toFixed(2);
-        }
-        this.tickers.forEach(ticker => {
-          if (ticker.pair === "BTC/USDT") {
-            ticker.price = lastBtcPrice;
-            ticker.percentChange = btcChange;
-          }
-          if (ticker.pair === "ETH/USDT") {
-            ticker.price = lastEthPrice;
-            ticker.percentChange = ethChange;
-          }
-        });
-      };
     }
   },
   mounted() {
-    this.getTickers();
+    this.$store.dispatch("callBinanceSocket");
   }
 };
 </script>

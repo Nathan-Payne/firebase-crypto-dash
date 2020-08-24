@@ -2,6 +2,9 @@
   <v-container class="grid-container">
     <section id="chart-section">
       <data-chart class="grid-item"></data-chart>
+      <div class="white--text">
+        {{ $store.getters.getTickersArray }}
+      </div>
     </section>
     <section id="ticker-section">
       <data-ticker class="grid-item"></data-ticker>

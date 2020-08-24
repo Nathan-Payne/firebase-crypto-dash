@@ -59,9 +59,6 @@ export default {
 </script>
 
 <style>
-body {
-  overflow: hidden;
-}
 .active-link {
   background-color: #0d7377;
 }
