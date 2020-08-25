@@ -1,33 +1,12 @@
 <script>
-import { HorizontalBar } from "vue-chartjs";
-
-const backgroundColorArray = () => {
-  let askColors = [];
-  let bidColors = [];
-  for (let i = 0; i < 20; i++) {
-    askColors.push("rgba(255, 0, 0, 0.8)");
-    bidColors.push("rgba(0, 255, 0, 0.8)");
-  }
-  return [...askColors, ...bidColors];
-};
+import { HorizontalBar, mixins } from "vue-chartjs";
 
 export default {
   name: "Depth",
   extends: HorizontalBar,
+  mixins: [mixins.reactiveProp],
   data() {
     return {
-      chartData: {
-        labels: this.$store.getters.getPriceAxis,
-        datasets: [
-          {
-            data: this.$store.getters.getAmountAxis,
-            backgroundColor: backgroundColorArray(),
-            barPercentage: 0.9,
-            categoryPercentage: 1,
-            barThickness: "flex"
-          }
-        ]
-      },
       options: {
         responsive: true,
         maintainAspectRatio: false,

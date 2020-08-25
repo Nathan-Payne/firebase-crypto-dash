@@ -14,6 +14,7 @@
         class="grid-item"
         :style="depthChartStyles"
         v-if="$store.getters.isLoaded"
+        :chart-data="chartData"
       ></data-depth>
     </section>
   </v-container>
@@ -25,6 +26,16 @@ import Chart from "@/components/Chart";
 import Ticker from "@/components/Ticker";
 import Depth from "@/components/Depth";
 
+const backgroundColorArray = () => {
+  let askColors = [];
+  let bidColors = [];
+  for (let i = 0; i < 20; i++) {
+    askColors.push("rgba(255, 0, 0, 0.8)");
+    bidColors.push("rgba(0, 255, 0, 0.8)");
+  }
+  return [...askColors, ...bidColors];
+};
+
 export default {
   name: "Home",
   components: {
@@ -34,9 +45,21 @@ export default {
   },
   data() {
     return {
+      chartData: {
+        labels: this.$store.getters.getPriceAxis,
+        datasets: [
+          {
+            data: this.$store.getters.getAmountAxis,
+            backgroundColor: backgroundColorArray(),
+            barPercentage: 0.96,
+            categoryPercentage: 1,
+            barThickness: "flex"
+          }
+        ]
+      },
       depthChartStyles: {
         width: "600px",
-        maxHeight: "99%",
+        maxHeight: "100%",
         position: "relative",
         paddingTop: "0"
       }
