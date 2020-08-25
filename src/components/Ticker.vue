@@ -34,9 +34,6 @@ export default {
         return { "red-border": true };
       }
     }
-  },
-  mounted() {
-    this.$store.dispatch("callBinanceSocket");
   }
 };
 </script>

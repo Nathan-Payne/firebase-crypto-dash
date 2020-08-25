@@ -1,40 +1,28 @@
 <script>
 import { HorizontalBar } from "vue-chartjs";
 
+const backgroundColorArray = () => {
+  let askColors = [];
+  let bidColors = [];
+  for (let i = 0; i < 20; i++) {
+    askColors.push("rgba(255, 0, 0, 0.8)");
+    bidColors.push("rgba(0, 255, 0, 0.8)");
+  }
+  return [...askColors, ...bidColors];
+};
+
 export default {
   name: "Depth",
   extends: HorizontalBar,
   data() {
     return {
-      dataset: {
-        labels: [
-          "priceAggHigh",
-          "priceAgginc",
-          "m1",
-          "m1",
-          "m1",
-          "m1",
-          "m1",
-          "m1",
-          "priceAggInc",
-          "priceAggLow"
-        ],
+      chartData: {
+        labels: this.$store.getters.getPriceAxis,
         datasets: [
           {
-            data: [12, 19, 3, 5, 7, 8, 22, 21, 33, 14],
-            backgroundColor: [
-              "rgba(0, 255, 0, 0.8)",
-              "rgba(0, 255, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)",
-              "rgba(255, 0, 0, 0.8)"
-            ],
-            barPercentage: 0.98,
+            data: this.$store.getters.getAmountAxis,
+            backgroundColor: backgroundColorArray(),
+            barPercentage: 0.9,
             categoryPercentage: 1,
             barThickness: "flex"
           }
@@ -60,6 +48,9 @@ export default {
               position: "bottom",
               gridLines: {
                 display: true
+              },
+              ticks: {
+                beginAtZero: true
               }
             }
           ],
@@ -77,7 +68,7 @@ export default {
     };
   },
   mounted() {
-    this.renderChart(this.dataset, this.options);
+    this.renderChart(this.chartData, this.options);
   }
 };
 </script>

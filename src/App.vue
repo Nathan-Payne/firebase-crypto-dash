@@ -54,7 +54,10 @@ export default {
   name: "App",
   data: () => ({
     showMenu: false
-  })
+  }),
+  mounted() {
+    this.$store.dispatch("callBinanceSocket");
+  }
 };
 </script>
 

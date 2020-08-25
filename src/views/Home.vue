@@ -3,14 +3,18 @@
     <section id="chart-section">
       <data-chart class="grid-item"></data-chart>
       <div class="white--text">
-        {{ $store.getters.getTickersArray }}
+        {{ $store.getters.getAmountAxis }}
       </div>
     </section>
     <section id="ticker-section">
       <data-ticker class="grid-item"></data-ticker>
     </section>
     <section id="depth-section">
-      <data-depth class="grid-item" :style="depthChartStyles"></data-depth>
+      <data-depth
+        class="grid-item"
+        :style="depthChartStyles"
+        v-if="$store.getters.isLoaded"
+      ></data-depth>
     </section>
   </v-container>
 </template>
@@ -31,7 +35,7 @@ export default {
   data() {
     return {
       depthChartStyles: {
-        width: "500px",
+        width: "600px",
         maxHeight: "99%",
         position: "relative",
         paddingTop: "0"
@@ -44,7 +48,7 @@ export default {
 <style scoped>
 #chart-section {
   grid-area: ct;
-  height: 50vh;
+  /* height: 50vh; */
 }
 #ticker-section {
   grid-area: tk;
@@ -63,10 +67,9 @@ export default {
   /* grid-template-columns: repeat(8, 1fr); */
   /* grid-template-rows: repeat(4, 1fr); */
   grid-template-areas:
-    "ct ct ct ct ct ct ct ct"
-    "ct ct ct ct ct ct ct ct"
-    "ct ct ct ct ct ct ct ct"
-    "tk tk tk tk dt dt dt dt";
+    "ct ct ct ct ct dt dt dt"
+    "ct ct ct ct ct dt dt dt"
+    "tk tk tk tk tk dt dt dt";
 }
 .grid-item {
   padding-top: 1rem;

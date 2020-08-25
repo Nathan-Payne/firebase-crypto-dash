@@ -3,8 +3,13 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
+function sortNumbersDesc(a, b) {
+  return b[0] - a[0];
+}
+
 export default new Vuex.Store({
   state: {
+    loaded: false,
     tickers: {
       BTCUSDT: {
         pair: "BTCUSDT",
@@ -16,6 +21,10 @@ export default new Vuex.Store({
         lastPrice: "",
         percentChange: ""
       }
+    },
+    orderbookDepth: {
+      priceAxis: [],
+      amountAxis: []
     }
   },
   getters: {
@@ -25,9 +34,21 @@ export default new Vuex.Store({
         arr.push(state.tickers[ticker]);
       }
       return arr;
+    },
+    getPriceAxis(state) {
+      return state.orderbookDepth.priceAxis.slice(30);
+    },
+    getAmountAxis(state) {
+      return state.orderbookDepth.amountAxis.slice(30);
+    },
+    isLoaded(state) {
+      return state.loaded;
     }
   },
   mutations: {
+    loaded(state) {
+      state.loaded = true;
+    },
     updateTicker(state, tickerInfo) {
       for (let ticker in state.tickers) {
         if (state.tickers[ticker].pair === tickerInfo.pair) {
@@ -35,6 +56,12 @@ export default new Vuex.Store({
           state.tickers[ticker].percentChange = tickerInfo.percentChange;
         }
       }
+    },
+    updateDepthPrice(state, priceAxis) {
+      state.orderbookDepth.priceAxis = priceAxis.dataArr;
+    },
+    updateDepthAmount(state, amountAxis) {
+      state.orderbookDepth.amountAxis = amountAxis.dataArr;
     }
   },
   actions: {
@@ -46,7 +73,7 @@ export default new Vuex.Store({
       };
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       const socket = await new WebSocket(
-        "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker"
+        "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20"
       );
       socket.onmessage = event => {
         const parsedData = JSON.parse(event.data);
@@ -56,6 +83,7 @@ export default new Vuex.Store({
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
             percentChange: parseFloat(parsedData.data.P).toFixed(2)
           };
+          context.commit("updateTicker", tickerInfo);
         }
         if (parsedData.stream == "ethusdt@ticker") {
           tickerInfo = {
@@ -63,8 +91,25 @@ export default new Vuex.Store({
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
             percentChange: parseFloat(parsedData.data.P).toFixed(2)
           };
+          context.commit("updateTicker", tickerInfo);
         }
-        context.commit("updateTicker", tickerInfo);
+        if (parsedData.stream == "btcusdt@depth20") {
+          const asks = parsedData.data.asks.sort(sortNumbersDesc);
+          const bids = parsedData.data.bids;
+          const orderedBookArr = [...asks, ...bids];
+          let priceAxis = orderedBookArr.map(el => {
+            return el[0];
+          });
+          let amountAxis = orderedBookArr.map(el => {
+            return el[1];
+          });
+          context.commit({
+            type: "updateDepthPrice",
+            dataArr: priceAxis
+          });
+          context.commit({ type: "updateDepthAmount", dataArr: amountAxis });
+        }
+        context.commit("loaded");
       };
     }
   },
