@@ -1,10 +1,7 @@
 <template>
-  <v-container class="grid-container">
+  <v-container class="container" fluid>
     <section id="chart-section">
       <data-chart class="grid-item"></data-chart>
-      <div class="white--text">
-        {{ $store.getters.getPriceAxis }}
-      </div>
     </section>
     <section id="ticker-section">
       <data-ticker class="grid-item"></data-ticker>
@@ -35,9 +32,9 @@ export default {
   data() {
     return {
       depthChartStyles: {
-        width: "500px",
-        maxHeight: "100%",
         position: "relative",
+        width: "100%",
+        height: "100%",
         paddingTop: "0"
       }
     };
@@ -48,28 +45,29 @@ export default {
 <style scoped>
 #chart-section {
   grid-area: ct;
-  /* height: 50vh; */
+  height: 45vh;
 }
 #ticker-section {
   grid-area: tk;
 }
 #depth-section {
   grid-area: dt;
-  display: flex;
-  justify-content: center;
+  justify-self: end;
   position: relative;
+  height: 90vh;
+  width: 300px;
 }
 .container {
   height: 100%;
   padding: 1rem;
   display: grid;
   gap: 1rem;
-  /* grid-template-columns: repeat(8, 1fr); */
-  /* grid-template-rows: repeat(4, 1fr); */
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(3, 1fr);
   grid-template-areas:
-    "ct ct ct ct ct ct ct ct"
-    "ct ct ct ct ct ct ct ct"
-    "tk tk tk tk tk dt dt dt";
+    "ct ct ct ct ct ct ct ct dt dt"
+    "ct ct ct ct ct ct ct ct dt dt"
+    "tk tk .  .  .  .  .  .  dt dt";
 }
 .grid-item {
   padding-top: 1rem;

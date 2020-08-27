@@ -36,7 +36,7 @@ export default {
         },
         options: {
           responsive: true,
-          // maintainAspectRatio: false,
+          maintainAspectRatio: false,
           tooltips: {
             displayColors: false,
             xPadding: 20,
@@ -56,7 +56,12 @@ export default {
                   display: true
                 },
                 ticks: {
-                  beginAtZero: true
+                  beginAtZero: true,
+                  suggestedMax: 10
+                },
+                scaleLabel: {
+                  display: true,
+                  labelString: "Amount of BTC"
                 }
               }
             ],
@@ -66,6 +71,13 @@ export default {
                 gridLines: {
                   display: false,
                   drawBorder: false
+                },
+                scaleLabel: {
+                  display: true,
+                  labelString: "BTC/USDT Price"
+                },
+                ticks: {
+                  precision: 2
                 }
               }
             ]
@@ -89,7 +101,7 @@ export default {
     fillData() {
       this.chartData.data.labels = this.$store.getters.getPriceAxis;
       this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis;
-      this.createdChart.update();
+      this.createdChart.update({ duration: 500 });
     }
   },
   computed: {

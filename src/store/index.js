@@ -99,16 +99,19 @@ export default new Vuex.Store({
           const bids = parsedData.data.bids;
           const orderedBookArr = [...asks, ...bids];
           let priceAxis = orderedBookArr.map(el => {
-            return el[0];
+            return parseFloat(el[0]);
           });
           let amountAxis = orderedBookArr.map(el => {
-            return el[1];
+            return parseFloat(el[1]);
           });
           context.commit({
             type: "updateDepthPrice",
             dataArr: priceAxis
           });
-          context.commit({ type: "updateDepthAmount", dataArr: amountAxis });
+          context.commit({
+            type: "updateDepthAmount",
+            dataArr: amountAxis
+          });
         }
         if (count > 1 && count < 5) {
           context.commit("loaded");
