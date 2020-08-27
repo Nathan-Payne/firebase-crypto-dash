@@ -1,53 +1,113 @@
+<template>
+  <canvas id="depthChart" width="200" height="200"></canvas>
+</template>
+
 <script>
-import { HorizontalBar, mixins } from "vue-chartjs";
+import Chart from "chart.js";
+
+const backgroundColorArray = () => {
+  let askColors = [];
+  let bidColors = [];
+  for (let i = 0; i < 20; i++) {
+    askColors.push("rgba(255, 0, 0, 0.8)");
+    bidColors.push("rgba(0, 255, 0, 0.8)");
+  }
+  return [...askColors, ...bidColors];
+};
 
 export default {
   name: "Depth",
-  extends: HorizontalBar,
-  mixins: [mixins.reactiveProp],
   data() {
     return {
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        tooltips: {
-          displayColors: false,
-          xPadding: 20,
-          callbacks: {
-            label: tooltipItem => {
-              return `Amount: ${tooltipItem.value}`;
-            }
-          }
-        },
-        scales: {
-          xAxes: [
+      chartData: {
+        type: "horizontalBar",
+        data: {
+          labels: [],
+          datasets: [
             {
-              id: "Amount of BTC on book",
-              type: "linear",
-              position: "bottom",
-              gridLines: {
-                display: true
-              },
-              ticks: {
-                beginAtZero: true
-              }
-            }
-          ],
-          yAxes: [
-            {
-              id: "BTC/USDT Price",
-              gridLines: {
-                display: false,
-                drawBorder: false
-              }
+              label: "Amount (BTC)",
+              data: [],
+              backgroundColor: backgroundColorArray(),
+              barPercentage: 0.95,
+              categoryPercentage: 1,
+              barThickness: "flex"
             }
           ]
+        },
+        options: {
+          responsive: true,
+          // maintainAspectRatio: false,
+          tooltips: {
+            displayColors: false,
+            xPadding: 20,
+            callbacks: {
+              label: tooltipItem => {
+                return `Amount: ${tooltipItem.value}`;
+              }
+            }
+          },
+          scales: {
+            xAxes: [
+              {
+                id: "Amount of BTC on book",
+                type: "linear",
+                position: "bottom",
+                gridLines: {
+                  display: true
+                },
+                ticks: {
+                  beginAtZero: true
+                }
+              }
+            ],
+            yAxes: [
+              {
+                id: "BTC/USDT Price",
+                gridLines: {
+                  display: false,
+                  drawBorder: false
+                }
+              }
+            ]
+          }
         }
-      }
+      },
+      createdChart: null
     };
   },
+  methods: {
+    createChart(chartId, chartData) {
+      const ctx = document.getElementById(chartId);
+      // eslint-disable-next-line no-unused-vars
+      const depthChart = new Chart(ctx, {
+        type: chartData.type,
+        data: chartData.data,
+        options: chartData.options
+      });
+      return depthChart;
+    },
+    fillData() {
+      this.chartData.data.labels = this.$store.getters.getPriceAxis;
+      this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis;
+      this.createdChart.update();
+    }
+  },
+  computed: {
+    storedChartData() {
+      return this.$store.getters.getAmountAxis;
+    }
+  },
+  watch: {
+    storedChartData: {
+      handler: function() {
+        this.fillData();
+      },
+      deep: true
+    }
+  },
   mounted() {
-    this.renderChart(this.chartData, this.options);
+    this.createdChart = this.createChart("depthChart", this.chartData);
+    this.fillData();
   }
 };
 </script>

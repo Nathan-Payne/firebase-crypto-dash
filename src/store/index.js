@@ -36,10 +36,10 @@ export default new Vuex.Store({
       return arr;
     },
     getPriceAxis(state) {
-      return state.orderbookDepth.priceAxis.slice(30);
+      return state.orderbookDepth.priceAxis;
     },
     getAmountAxis(state) {
-      return state.orderbookDepth.amountAxis.slice(30);
+      return state.orderbookDepth.amountAxis;
     },
     isLoaded(state) {
       return state.loaded;
@@ -71,6 +71,7 @@ export default new Vuex.Store({
         lastPrice: "",
         percentChange: ""
       };
+      let count = 0;
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       const socket = await new WebSocket(
         "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20"
@@ -109,7 +110,12 @@ export default new Vuex.Store({
           });
           context.commit({ type: "updateDepthAmount", dataArr: amountAxis });
         }
-        context.commit("loaded");
+        if (count > 1 && count < 5) {
+          context.commit("loaded");
+        }
+        if (count < 5) {
+          count++;
+        }
       };
     }
   },
