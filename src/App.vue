@@ -57,6 +57,7 @@ export default {
   }),
   mounted() {
     this.$store.dispatch("callBinanceSocket");
+    this.$store.dispatch("getCandlestickData", { interval: "5m" });
   }
 };
 </script>

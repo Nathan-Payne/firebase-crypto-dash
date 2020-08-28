@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import axios from "axios";
 
 Vue.use(Vuex);
 
@@ -120,6 +121,18 @@ export default new Vuex.Store({
           count++;
         }
       };
+    },
+    async getCandlestickData(context, { interval }) {
+      try {
+        const response = await axios.get(
+          `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}`
+        );
+      } catch (err) {
+        console.error(err);
+      }
+      // const formattedCandlesticks = response.data.map(stick => {
+      //   return
+      // });
     }
   },
   modules: {}
