@@ -18,28 +18,28 @@
 
 <script>
 // @ is an alias to /src
-import Chart from "@/components/Chart";
-import Ticker from "@/components/Ticker";
-import Depth from "@/components/Depth";
+import Chart from '@/components/Chart'
+import Ticker from '@/components/Ticker'
+import Depth from '@/components/Depth'
 
 export default {
-  name: "Home",
+  name: 'Home',
   components: {
-    "data-chart": Chart,
-    "data-ticker": Ticker,
-    "data-depth": Depth
+    'data-chart': Chart,
+    'data-ticker': Ticker,
+    'data-depth': Depth,
   },
   data() {
     return {
       depthChartStyles: {
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        paddingTop: "0"
-      }
-    };
-  }
-};
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        paddingTop: '0',
+      },
+    }
+  },
+}
 </script>
 
 <style scoped>
@@ -65,9 +65,9 @@ export default {
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(3, 1fr);
   grid-template-areas:
-    "ct ct ct ct ct ct ct ct dt dt"
-    "ct ct ct ct ct ct ct ct dt dt"
-    "tk tk .  .  .  .  .  .  dt dt";
+    'ct ct ct ct ct ct ct ct dt dt'
+    'ct ct ct ct ct ct ct ct dt dt'
+    'tk tk .  .  .  .  .  .  dt dt';
 }
 .grid-item {
   padding-top: 1rem;

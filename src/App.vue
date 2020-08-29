@@ -47,19 +47,19 @@
 </template>
 
 <script>
-import { Chart } from "chart.js";
-Chart.defaults.global.legend.display = false;
+import { Chart } from 'chart.js'
+Chart.defaults.global.legend.display = false
 
 export default {
-  name: "App",
+  name: 'App',
   data: () => ({
-    showMenu: false
+    showMenu: false,
   }),
   mounted() {
-    this.$store.dispatch("callBinanceSocket");
-    this.$store.dispatch("getCandlestickData", { interval: "5m" });
-  }
-};
+    this.$store.dispatch('callBinanceSocket')
+    this.$store.dispatch('getCandlestickData', { interval: '5m' })
+  },
+}
 </script>
 
 <style>

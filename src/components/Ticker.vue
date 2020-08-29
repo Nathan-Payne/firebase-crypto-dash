@@ -15,27 +15,27 @@
 
 <script>
 export default {
-  name: "Ticker",
+  name: 'Ticker',
   data() {
     return {
       headers: [
-        { text: "Pair", value: "pair" },
-        { text: "Price", value: "lastPrice" },
-        { text: "% Change", value: "percentChange" }
+        { text: 'Pair', value: 'pair' },
+        { text: 'Price', value: 'lastPrice' },
+        { text: '% Change', value: 'percentChange' },
       ],
-      tickers: this.$store.getters.getTickersArray
-    };
+      tickers: this.$store.getters.getTickersArray,
+    }
   },
   methods: {
     rowHighlight(row) {
       if (parseFloat(row.percentChange) > 0) {
-        return { "green-border": true };
+        return { 'green-border': true }
       } else {
-        return { "red-border": true };
+        return { 'red-border': true }
       }
-    }
-  }
-};
+    },
+  },
+}
 </script>
 
 <style>

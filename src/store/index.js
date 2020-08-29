@@ -1,11 +1,11 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import axios from "axios";
+import Vue from 'vue'
+import Vuex from 'vuex'
+import axios from 'axios'
 
-Vue.use(Vuex);
+Vue.use(Vuex)
 
 function sortNumbersDesc(a, b) {
-  return b[0] - a[0];
+  return b[0] - a[0]
 }
 
 export default new Vuex.Store({
@@ -13,127 +13,136 @@ export default new Vuex.Store({
     loaded: false,
     tickers: {
       BTCUSDT: {
-        pair: "BTCUSDT",
-        lastPrice: "",
-        percentChange: ""
+        pair: 'BTCUSDT',
+        lastPrice: '',
+        percentChange: '',
       },
       ETHUSDT: {
-        pair: "ETHUSDT",
-        lastPrice: "",
-        percentChange: ""
-      }
+        pair: 'ETHUSDT',
+        lastPrice: '',
+        percentChange: '',
+      },
     },
     orderbookDepth: {
       priceAxis: [],
-      amountAxis: []
-    }
+      amountAxis: [],
+    },
   },
   getters: {
     getTickersArray: state => {
-      let arr = [];
+      let arr = []
       for (let ticker in state.tickers) {
-        arr.push(state.tickers[ticker]);
+        arr.push(state.tickers[ticker])
       }
-      return arr;
+      return arr
     },
     getPriceAxis(state) {
-      return state.orderbookDepth.priceAxis;
+      return state.orderbookDepth.priceAxis
     },
     getAmountAxis(state) {
-      return state.orderbookDepth.amountAxis;
+      return state.orderbookDepth.amountAxis
     },
     isLoaded(state) {
-      return state.loaded;
-    }
+      return state.loaded
+    },
   },
   mutations: {
     loaded(state) {
-      state.loaded = true;
+      state.loaded = true
     },
     updateTicker(state, tickerInfo) {
       for (let ticker in state.tickers) {
         if (state.tickers[ticker].pair === tickerInfo.pair) {
-          state.tickers[ticker].lastPrice = tickerInfo.lastPrice;
-          state.tickers[ticker].percentChange = tickerInfo.percentChange;
+          state.tickers[ticker].lastPrice = tickerInfo.lastPrice
+          state.tickers[ticker].percentChange = tickerInfo.percentChange
         }
       }
     },
     updateDepthPrice(state, priceAxis) {
-      state.orderbookDepth.priceAxis = priceAxis.dataArr;
+      state.orderbookDepth.priceAxis = priceAxis.dataArr
     },
     updateDepthAmount(state, amountAxis) {
-      state.orderbookDepth.amountAxis = amountAxis.dataArr;
-    }
+      state.orderbookDepth.amountAxis = amountAxis.dataArr
+    },
   },
   actions: {
     async callBinanceSocket(context) {
       let tickerInfo = {
-        pair: "",
-        lastPrice: "",
-        percentChange: ""
-      };
-      let count = 0;
+        pair: '',
+        lastPrice: '',
+        percentChange: '',
+      }
+      let count = 0
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       const socket = await new WebSocket(
-        "wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20"
-      );
+        'wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20'
+      )
       socket.onmessage = event => {
-        const parsedData = JSON.parse(event.data);
-        if (parsedData.stream == "btcusdt@ticker") {
+        const parsedData = JSON.parse(event.data)
+        if (parsedData.stream == 'btcusdt@ticker') {
           tickerInfo = {
-            pair: "BTCUSDT",
+            pair: 'BTCUSDT',
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
-            percentChange: parseFloat(parsedData.data.P).toFixed(2)
-          };
-          context.commit("updateTicker", tickerInfo);
+            percentChange: parseFloat(parsedData.data.P).toFixed(2),
+          }
+          context.commit('updateTicker', tickerInfo)
         }
-        if (parsedData.stream == "ethusdt@ticker") {
+        if (parsedData.stream == 'ethusdt@ticker') {
           tickerInfo = {
-            pair: "ETHUSDT",
+            pair: 'ETHUSDT',
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
-            percentChange: parseFloat(parsedData.data.P).toFixed(2)
-          };
-          context.commit("updateTicker", tickerInfo);
+            percentChange: parseFloat(parsedData.data.P).toFixed(2),
+          }
+          context.commit('updateTicker', tickerInfo)
         }
-        if (parsedData.stream == "btcusdt@depth20") {
-          const asks = parsedData.data.asks.sort(sortNumbersDesc);
-          const bids = parsedData.data.bids;
-          const orderedBookArr = [...asks, ...bids];
+        if (parsedData.stream == 'btcusdt@depth20') {
+          const asks = parsedData.data.asks.sort(sortNumbersDesc)
+          const bids = parsedData.data.bids
+          const orderedBookArr = [...asks, ...bids]
           let priceAxis = orderedBookArr.map(el => {
-            return parseFloat(el[0]);
-          });
+            return parseFloat(el[0])
+          })
           let amountAxis = orderedBookArr.map(el => {
-            return parseFloat(el[1]);
-          });
+            return parseFloat(el[1])
+          })
           context.commit({
-            type: "updateDepthPrice",
-            dataArr: priceAxis
-          });
+            type: 'updateDepthPrice',
+            dataArr: priceAxis,
+          })
           context.commit({
-            type: "updateDepthAmount",
-            dataArr: amountAxis
-          });
+            type: 'updateDepthAmount',
+            dataArr: amountAxis,
+          })
         }
         if (count > 1 && count < 5) {
-          context.commit("loaded");
+          context.commit('loaded')
         }
         if (count < 5) {
-          count++;
+          count++
         }
-      };
+      }
     },
     async getCandlestickData(context, { interval }) {
+      let response
       try {
-        const response = await axios.get(
+        response = await axios.get(
           `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}`
-        );
+        )
       } catch (err) {
-        console.error(err);
+        console.error(err)
       }
-      // const formattedCandlesticks = response.data.map(stick => {
-      //   return
-      // });
-    }
+      const formattedCandlesticks = response.data.map(stick => {
+        return {
+          time: stick[0],
+          open: stick[1],
+          high: stick[2],
+          low: stick[3],
+          close: stick[4],
+          volume: stick[5],
+        }
+      })
+      console.log(formattedCandlesticks)
+    },
   },
-  modules: {}
-});
+  modules: {},
+})

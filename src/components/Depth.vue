@@ -3,36 +3,36 @@
 </template>
 
 <script>
-import Chart from "chart.js";
+import Chart from 'chart.js'
 
 const backgroundColorArray = () => {
-  let askColors = [];
-  let bidColors = [];
+  let askColors = []
+  let bidColors = []
   for (let i = 0; i < 20; i++) {
-    askColors.push("rgba(255, 0, 0, 0.8)");
-    bidColors.push("rgba(0, 255, 0, 0.8)");
+    askColors.push('rgba(255, 0, 0, 0.8)')
+    bidColors.push('rgba(0, 255, 0, 0.8)')
   }
-  return [...askColors, ...bidColors];
-};
+  return [...askColors, ...bidColors]
+}
 
 export default {
-  name: "Depth",
+  name: 'Depth',
   data() {
     return {
       chartData: {
-        type: "horizontalBar",
+        type: 'horizontalBar',
         data: {
           labels: [],
           datasets: [
             {
-              label: "Amount (BTC)",
+              label: 'Amount (BTC)',
               data: [],
               backgroundColor: backgroundColorArray(),
               barPercentage: 0.95,
               categoryPercentage: 1,
-              barThickness: "flex"
-            }
-          ]
+              barThickness: 'flex',
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -42,84 +42,84 @@ export default {
             xPadding: 20,
             callbacks: {
               label: tooltipItem => {
-                return `Amount: ${tooltipItem.value}`;
-              }
-            }
+                return `Amount: ${tooltipItem.value}`
+              },
+            },
           },
           scales: {
             xAxes: [
               {
-                id: "Amount of BTC on book",
-                type: "linear",
-                position: "bottom",
+                id: 'Amount of BTC on book',
+                type: 'linear',
+                position: 'bottom',
                 gridLines: {
-                  display: true
+                  display: true,
                 },
                 ticks: {
                   beginAtZero: true,
-                  suggestedMax: 10
+                  suggestedMax: 10,
                 },
                 scaleLabel: {
                   display: true,
-                  labelString: "Amount of BTC"
-                }
-              }
+                  labelString: 'Amount of BTC',
+                },
+              },
             ],
             yAxes: [
               {
-                id: "BTC/USDT Price",
+                id: 'BTC/USDT Price',
                 gridLines: {
                   display: false,
-                  drawBorder: false
+                  drawBorder: false,
                 },
                 scaleLabel: {
                   display: true,
-                  labelString: "BTC/USDT Price"
+                  labelString: 'BTC/USDT Price',
                 },
                 ticks: {
-                  precision: 2
-                }
-              }
-            ]
-          }
-        }
+                  precision: 2,
+                },
+              },
+            ],
+          },
+        },
       },
-      createdChart: null
-    };
+      createdChart: null,
+    }
   },
   methods: {
     createChart(chartId, chartData) {
-      const ctx = document.getElementById(chartId);
+      const ctx = document.getElementById(chartId)
       // eslint-disable-next-line no-unused-vars
       const depthChart = new Chart(ctx, {
         type: chartData.type,
         data: chartData.data,
-        options: chartData.options
-      });
-      return depthChart;
+        options: chartData.options,
+      })
+      return depthChart
     },
     fillData() {
-      this.chartData.data.labels = this.$store.getters.getPriceAxis;
-      this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis;
-      this.createdChart.update({ duration: 500 });
-    }
+      this.chartData.data.labels = this.$store.getters.getPriceAxis
+      this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis
+      this.createdChart.update({ duration: 500 })
+    },
   },
   computed: {
     storedChartData() {
-      return this.$store.getters.getAmountAxis;
-    }
+      return this.$store.getters.getAmountAxis
+    },
   },
   watch: {
     storedChartData: {
       handler: function() {
-        this.fillData();
+        this.fillData()
       },
-      deep: true
-    }
+      deep: true,
+    },
   },
   mounted() {
-    this.createdChart = this.createChart("depthChart", this.chartData);
-    this.fillData();
-  }
-};
+    this.createdChart = this.createChart('depthChart', this.chartData)
+    this.fillData()
+  },
+}
 </script>
