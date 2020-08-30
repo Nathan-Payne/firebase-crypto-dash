@@ -1,7 +1,10 @@
 <template>
   <v-container class="container" fluid>
     <section id="chart-section">
-      <data-chart class="grid-item"></data-chart>
+      <data-chart
+        class="grid-item chart-size"
+        v-if="$store.getters.isLoaded"
+      ></data-chart>
     </section>
     <section id="ticker-section">
       <data-ticker class="grid-item"></data-ticker>
@@ -45,7 +48,11 @@ export default {
 <style scoped>
 #chart-section {
   grid-area: ct;
-  height: 45vh;
+}
+#chart-section .chart-size {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 #ticker-section {
   grid-area: tk;
@@ -55,21 +62,27 @@ export default {
   justify-self: end;
   position: relative;
   height: 90vh;
-  width: 300px;
+  width: 100%;
 }
 .container {
   height: 100%;
   padding: 1rem;
   display: grid;
-  gap: 1rem;
+  gap: 0.8rem;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(3, 1fr);
   grid-template-areas:
     'ct ct ct ct ct ct ct ct dt dt'
     'ct ct ct ct ct ct ct ct dt dt'
-    'tk tk .  .  .  .  .  .  dt dt';
+    'tk tk tk  .  .  .  .  . dt dt';
 }
 .grid-item {
   padding-top: 1rem;
 }
+
+/* @media (max-width: 1300px) {
+  #depth-section {
+    width: 250px;
+  }
+} */
 </style>

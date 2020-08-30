@@ -27,7 +27,9 @@ export default new Vuex.Store({
       priceAxis: [],
       amountAxis: [],
     },
+    candlesticks: [],
   },
+
   getters: {
     getTickersArray: state => {
       let arr = []
@@ -36,20 +38,14 @@ export default new Vuex.Store({
       }
       return arr
     },
-    getPriceAxis(state) {
-      return state.orderbookDepth.priceAxis
-    },
-    getAmountAxis(state) {
-      return state.orderbookDepth.amountAxis
-    },
-    isLoaded(state) {
-      return state.loaded
-    },
+    getPriceAxis: state => state.orderbookDepth.priceAxis,
+    getAmountAxis: state => state.orderbookDepth.amountAxis,
+    isLoaded: state => state.loaded,
+    getCandlestickData: state => state.candlesticks,
   },
+
   mutations: {
-    loaded(state) {
-      state.loaded = true
-    },
+    loaded: state => (state.loaded = true),
     updateTicker(state, tickerInfo) {
       for (let ticker in state.tickers) {
         if (state.tickers[ticker].pair === tickerInfo.pair) {
@@ -64,7 +60,11 @@ export default new Vuex.Store({
     updateDepthAmount(state, amountAxis) {
       state.orderbookDepth.amountAxis = amountAxis.dataArr
     },
+    getCandlestickData(state, formattedCandlesticks) {
+      state.candlesticks = formattedCandlesticks
+    },
   },
+
   actions: {
     async callBinanceSocket(context) {
       let tickerInfo = {
@@ -133,16 +133,17 @@ export default new Vuex.Store({
       }
       const formattedCandlesticks = response.data.map(stick => {
         return {
-          time: stick[0],
-          open: stick[1],
-          high: stick[2],
-          low: stick[3],
-          close: stick[4],
-          volume: stick[5],
+          time: parseFloat(stick[0]) / 1000,
+          open: parseFloat(stick[1]),
+          high: parseFloat(stick[2]),
+          low: parseFloat(stick[3]),
+          close: parseFloat(stick[4]),
+          volume: parseFloat(stick[5]),
         }
       })
-      console.log(formattedCandlesticks)
+      context.commit('getCandlestickData', formattedCandlesticks)
     },
   },
+
   modules: {},
 })
