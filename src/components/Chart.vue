@@ -16,6 +16,15 @@ export default {
     candlestickData() {
       return this.$store.getters.getCandlestickData
     },
+    candlestickSeries() {
+      return this.chart.addCandlestickSeries({
+        borderVisible: false,
+      })
+    },
+    currentCandlestick() {
+      let arr = this.$store.getters.getCandlestickData
+      return arr[arr.length - 1]
+    },
   },
   methods: {
     resizeChart(width, height) {
@@ -25,6 +34,9 @@ export default {
       })
     },
   },
+  watch: {
+    candlestickData() {},
+  },
   mounted() {
     this.chart = createChart(this.$refs.chart, {
       width: this.$refs.chart.innerWidth,
@@ -32,6 +44,7 @@ export default {
       layout: {
         backgroundColor: '#181818',
         textColor: '#eee',
+        fontFamily: 'Roboto',
       },
       grid: {
         vertLines: {
@@ -45,18 +58,36 @@ export default {
         timeVisible: true,
         secondsVisible: false,
       },
+      crosshair: {
+        mode: 0,
+      },
     })
-    const candlestickSeries = this.chart.addCandlestickSeries({
-      borderVisible: false,
-    })
-    candlestickSeries.setData(this.candlestickData)
+    this.candlestickSeries.setData(this.candlestickData)
 
+    // Live updates
+    let currentBar = this.currentCandlestick
+    setInterval(() => {
+      let price = parseFloat(this.$store.getters.getBtcPrice)
+      if (currentBar.open === null) {
+        currentBar.open = price
+        currentBar.high = price
+        currentBar.low = price
+        currentBar.close = price
+      } else {
+        currentBar.close = price
+        currentBar.high = Math.max(currentBar.high, price)
+        currentBar.low = Math.min(currentBar.low, price)
+      }
+      console.log(currentBar)
+      this.candlestickSeries.update(currentBar)
+    }, 2000)
+
+    // Handle making chart responsive
     const ro = new ResizeObserver(entries => {
       // resize observer (native JS)
       const cr = entries[0].contentRect
       this.resizeChart(cr.width, cr.height)
     })
-
     ro.observe(this.$refs.chart)
     window.addEventListener('resize', () => {
       this.resizeChart(
@@ -73,5 +104,7 @@ export default {
   position: absolute;
   width: 100%;
   height: 100%;
+  padding-top: 0;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
 }
 </style>

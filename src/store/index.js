@@ -42,6 +42,7 @@ export default new Vuex.Store({
     getAmountAxis: state => state.orderbookDepth.amountAxis,
     isLoaded: state => state.loaded,
     getCandlestickData: state => state.candlesticks,
+    getBtcPrice: state => state.tickers.BTCUSDT.lastPrice,
   },
 
   mutations: {
@@ -142,6 +143,15 @@ export default new Vuex.Store({
         }
       })
       context.commit('getCandlestickData', formattedCandlesticks)
+    },
+    async candlestickTimer(context, interval) {
+      let date = new Date()
+      // let hour = date.getHours()
+      // let min = date.getMinutes()
+      let sec = date.getSeconds()
+      if (interval.interval === '1m' && sec === 1) {
+        context.dispatch('getCandlestickData', interval)
+      }
     },
   },
 
