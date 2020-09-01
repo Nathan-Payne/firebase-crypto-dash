@@ -43,12 +43,12 @@ export default {
   border: 0px solid black !important;
 }
 .red-border td:nth-child(1) {
-  border-left: 5px solid red !important;
+  border-left: 5px solid #ff2222 !important;
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
 }
 .green-border td:nth-child(1) {
-  border-left: 5px solid lime !important;
+  border-left: 5px solid #22dd22 !important;
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
 }

@@ -9,8 +9,8 @@ const backgroundColorArray = () => {
   let askColors = []
   let bidColors = []
   for (let i = 0; i < 20; i++) {
-    askColors.push('rgba(255, 0, 0, 0.8)')
-    bidColors.push('rgba(0, 255, 0, 0.8)')
+    askColors.push('rgba(34, 221, 34, 1)')
+    bidColors.push('rgba(255, 34, 34, 1)')
   }
   return [...askColors, ...bidColors]
 }

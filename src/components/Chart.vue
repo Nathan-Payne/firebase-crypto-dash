@@ -1,5 +1,7 @@
 <template>
-  <div id="candlestick-chart" ref="chart"></div>
+  <div id="candlestick-chart" ref="chart">
+    <div class="legend">BTCUSDT {{ this.$store.getters.getChartInterval }}</div>
+  </div>
 </template>
 
 <script>
@@ -56,11 +58,11 @@ export default {
     const candleseries = this.chart.addCandlestickSeries({
       borderVisible: false,
       upColor: '#22dd22',
-      downColor: '#ee4242',
+      downColor: '#ff2222',
       borderUpColor: '#22dd22',
-      borderDownColor: '#ee4242',
+      borderDownColor: '#ff2222',
       wickUpColor: '#22dd22',
-      wickDownColor: '#ee4242',
+      wickDownColor: '#ff2222',
     })
     candleseries.setData(this.candlestickData)
     setInterval(() => {
@@ -69,7 +71,6 @@ export default {
 
     // Handle making chart responsive
     const ro = new ResizeObserver(entries => {
-      // resize observer (native JS)
       const cr = entries[0].contentRect
       this.resizeChart(cr.width, cr.height)
     })
@@ -86,10 +87,22 @@ export default {
 
 <style scoped>
 #candlestick-chart {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  position: relative;
   padding-top: 0;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.legend {
+  width: 96px;
+  height: 70px;
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  padding: 0.2rem;
+  font-size: 1.4rem;
+  color: #eeeeee;
+  text-align: left;
+  z-index: 1000;
+  pointer-events: none;
 }
 </style>

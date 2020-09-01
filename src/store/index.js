@@ -11,6 +11,7 @@ function sortNumbersDesc(a, b) {
 export default new Vuex.Store({
   state: {
     loaded: false,
+    chartInterval: '5m',
     tickers: {
       BTCUSDT: {
         pair: 'BTCUSDT',
@@ -33,6 +34,7 @@ export default new Vuex.Store({
 
   getters: {
     isLoaded: state => state.loaded,
+    getChartInterval: state => state.chartInterval,
     getTickersArray: state => {
       let arr = []
       for (let ticker in state.tickers) {
@@ -72,7 +74,7 @@ export default new Vuex.Store({
   },
 
   actions: {
-    async callBinanceSocket({ commit }) {
+    async callBinanceSocket({ commit }, { chartInterval }) {
       let tickerInfo = {
         pair: '',
         lastPrice: '',
@@ -81,7 +83,7 @@ export default new Vuex.Store({
       let count = 0
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       const socket = await new WebSocket(
-        'wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20/btcusdt@kline_1m'
+        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20/btcusdt@kline_${chartInterval}`
       )
       socket.onmessage = event => {
         const parsedData = JSON.parse(event.data)
@@ -120,7 +122,7 @@ export default new Vuex.Store({
             dataArr: amountAxis,
           })
         }
-        if (parsedData.stream == 'btcusdt@kline_1m') {
+        if (parsedData.stream == `btcusdt@kline_${chartInterval}`) {
           const candle = parsedData.data.k
           const currentCandle = {
             time: parseFloat(candle.t) / 1000,
