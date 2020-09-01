@@ -58,10 +58,6 @@ export default {
   mounted() {
     this.$store.dispatch('callBinanceSocket')
     this.$store.dispatch('getCandlestickData', { interval: '1m' })
-
-    setInterval(() => {
-      this.$store.dispatch('candlestickTimer', { interval: '1m' })
-    }, 1000)
   },
 }
 </script>

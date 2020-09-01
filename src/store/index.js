@@ -28,9 +28,11 @@ export default new Vuex.Store({
       amountAxis: [],
     },
     candlesticks: [],
+    currentCandle: {},
   },
 
   getters: {
+    isLoaded: state => state.loaded,
     getTickersArray: state => {
       let arr = []
       for (let ticker in state.tickers) {
@@ -40,9 +42,9 @@ export default new Vuex.Store({
     },
     getPriceAxis: state => state.orderbookDepth.priceAxis,
     getAmountAxis: state => state.orderbookDepth.amountAxis,
-    isLoaded: state => state.loaded,
     getCandlestickData: state => state.candlesticks,
     getBtcPrice: state => state.tickers.BTCUSDT.lastPrice,
+    getCurrentCandle: state => state.currentCandle,
   },
 
   mutations: {
@@ -64,10 +66,13 @@ export default new Vuex.Store({
     getCandlestickData(state, formattedCandlesticks) {
       state.candlesticks = formattedCandlesticks
     },
+    updateCurrentCandle(state, currentCandle) {
+      state.currentCandle = currentCandle
+    },
   },
 
   actions: {
-    async callBinanceSocket(context) {
+    async callBinanceSocket({ commit }) {
       let tickerInfo = {
         pair: '',
         lastPrice: '',
@@ -76,7 +81,7 @@ export default new Vuex.Store({
       let count = 0
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       const socket = await new WebSocket(
-        'wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20'
+        'wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20/btcusdt@kline_1m'
       )
       socket.onmessage = event => {
         const parsedData = JSON.parse(event.data)
@@ -86,7 +91,7 @@ export default new Vuex.Store({
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
             percentChange: parseFloat(parsedData.data.P).toFixed(2),
           }
-          context.commit('updateTicker', tickerInfo)
+          commit('updateTicker', tickerInfo)
         }
         if (parsedData.stream == 'ethusdt@ticker') {
           tickerInfo = {
@@ -94,7 +99,7 @@ export default new Vuex.Store({
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
             percentChange: parseFloat(parsedData.data.P).toFixed(2),
           }
-          context.commit('updateTicker', tickerInfo)
+          commit('updateTicker', tickerInfo)
         }
         if (parsedData.stream == 'btcusdt@depth20') {
           const asks = parsedData.data.asks.sort(sortNumbersDesc)
@@ -106,17 +111,29 @@ export default new Vuex.Store({
           let amountAxis = orderedBookArr.map(el => {
             return parseFloat(el[1])
           })
-          context.commit({
+          commit({
             type: 'updateDepthPrice',
             dataArr: priceAxis,
           })
-          context.commit({
+          commit({
             type: 'updateDepthAmount',
             dataArr: amountAxis,
           })
         }
+        if (parsedData.stream == 'btcusdt@kline_1m') {
+          const candle = parsedData.data.k
+          const currentCandle = {
+            time: parseFloat(candle.t) / 1000,
+            open: parseFloat(candle.o),
+            high: parseFloat(candle.h),
+            low: parseFloat(candle.l),
+            close: parseFloat(candle.c),
+          }
+          commit('updateCurrentCandle', currentCandle)
+        }
+
         if (count > 1 && count < 5) {
-          context.commit('loaded')
+          commit('loaded')
         }
         if (count < 5) {
           count++
@@ -143,15 +160,6 @@ export default new Vuex.Store({
         }
       })
       context.commit('getCandlestickData', formattedCandlesticks)
-    },
-    async candlestickTimer(context, interval) {
-      let date = new Date()
-      // let hour = date.getHours()
-      // let min = date.getMinutes()
-      let sec = date.getSeconds()
-      if (interval.interval === '1m' && sec === 1) {
-        context.dispatch('getCandlestickData', interval)
-      }
     },
   },
 

@@ -16,14 +16,8 @@ export default {
     candlestickData() {
       return this.$store.getters.getCandlestickData
     },
-    candlestickSeries() {
-      return this.chart.addCandlestickSeries({
-        borderVisible: false,
-      })
-    },
-    currentCandlestick() {
-      let arr = this.$store.getters.getCandlestickData
-      return arr[arr.length - 1]
+    currentCandle() {
+      return this.$store.getters.getCurrentCandle
     },
   },
   methods: {
@@ -33,9 +27,6 @@ export default {
         height: height,
       })
     },
-  },
-  watch: {
-    candlestickData() {},
   },
   mounted() {
     this.chart = createChart(this.$refs.chart, {
@@ -62,25 +53,19 @@ export default {
         mode: 0,
       },
     })
-    this.candlestickSeries.setData(this.candlestickData)
-
-    // Live updates
-    let currentBar = this.currentCandlestick
+    const candleseries = this.chart.addCandlestickSeries({
+      borderVisible: false,
+      upColor: '#22dd22',
+      downColor: '#ee4242',
+      borderUpColor: '#22dd22',
+      borderDownColor: '#ee4242',
+      wickUpColor: '#22dd22',
+      wickDownColor: '#ee4242',
+    })
+    candleseries.setData(this.candlestickData)
     setInterval(() => {
-      let price = parseFloat(this.$store.getters.getBtcPrice)
-      if (currentBar.open === null) {
-        currentBar.open = price
-        currentBar.high = price
-        currentBar.low = price
-        currentBar.close = price
-      } else {
-        currentBar.close = price
-        currentBar.high = Math.max(currentBar.high, price)
-        currentBar.low = Math.min(currentBar.low, price)
-      }
-      console.log(currentBar)
-      this.candlestickSeries.update(currentBar)
-    }, 2000)
+      candleseries.update(this.currentCandle)
+    }, 1000)
 
     // Handle making chart responsive
     const ro = new ResizeObserver(entries => {
