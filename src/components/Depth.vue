@@ -5,16 +5,6 @@
 <script>
 import Chart from 'chart.js'
 
-const backgroundColorArray = () => {
-  let askColors = []
-  let bidColors = []
-  for (let i = 0; i < 20; i++) {
-    askColors.push('rgba(34, 221, 34, 1)')
-    bidColors.push('rgba(255, 34, 34, 1)')
-  }
-  return [...askColors, ...bidColors]
-}
-
 export default {
   name: 'Depth',
   data() {
@@ -27,7 +17,7 @@ export default {
             {
               label: 'Amount (BTC)',
               data: [],
-              backgroundColor: backgroundColorArray(),
+              backgroundColor: this.backgroundColorArray(),
               barPercentage: 0.95,
               categoryPercentage: 1,
               barThickness: 'flex',
@@ -102,6 +92,15 @@ export default {
       this.chartData.data.labels = this.$store.getters.getPriceAxis
       this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis
       this.createdChart.update({ duration: 500 })
+    },
+    backgroundColorArray() {
+      let askColors = []
+      let bidColors = []
+      for (let i = 0; i < this.$store.getters.getPriceAxis.length; i++) {
+        askColors.push('rgba(34, 221, 34, 1)')
+        bidColors.push('rgba(255, 34, 34, 1)')
+      }
+      return [...askColors, ...bidColors]
     },
   },
   computed: {

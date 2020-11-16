@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar app color="c-3" flat dense>
       <v-toolbar-title class="white--text px-10"
-        >Gnomes secret data</v-toolbar-title
+        >Bitcoin Perspective</v-toolbar-title
       >
       <v-spacer></v-spacer>
       <!-- <v-app-bar-nav-icon @click="showMenu = true"></v-app-bar-nav-icon> -->
