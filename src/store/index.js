@@ -81,12 +81,15 @@ export default new Vuex.Store({
         lastPrice: '',
         percentChange: '',
       }
-      let bufferedEvents = []
-      let depthSnapshot
+      let depthSnapshot, fullOrderbook
       try {
         depthSnapshot = await axios.get(
           'https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=1000'
         )
+        // static orderbook - initial state from rest api call
+        const asks = depthSnapshot.data.asks.sort(sortNumbersDesc)
+        const bids = depthSnapshot.data.bids
+        fullOrderbook = [...asks, ...bids]
       } catch (err) {
         console.error(err)
       }
@@ -113,6 +116,7 @@ export default new Vuex.Store({
           }
           commit('updateTicker', tickerInfo)
         }
+        // LIVE ORDERBOOK DATA THROUGH WEBSOCKET - ONLY FIRST 20 LEVELS
         // if (parsedData.stream == 'btcusdt@depth20') {
         //   const asks = parsedData.data.asks.sort(sortNumbersDesc)
         //   const bids = parsedData.data.bids
@@ -133,19 +137,27 @@ export default new Vuex.Store({
         //   })
         // }
         if (parsedData.stream == 'btcusdt@depth') {
-          // static orderbook - initial state from rest api call
-          const asks = depthSnapshot.data.asks.sort(sortNumbersDesc)
-          const bids = depthSnapshot.data.bids
-          const fullOrderbook = [...asks, ...bids]
-
-          bufferedEvents.push(parsedData.data)
-          bufferedEvents.forEach(event => {
-            if (event.u <= depthSnapshot.data.lastUpdateId) {
-              bufferedEvents.splice(bufferedEvents.indexOf(event), 1)
-            }
-            //use event bid/asks to process depthSnapshot bid/ask levels (check types, nested loops) -
-            //event.b.foreach(arr =>{use arr[0] to findOne in bids, then update bids amount})
-          })
+          let orderbookChanges = [...parsedData.data.a, ...parsedData.data.b]
+          // ensure data recorded by websocket before REST API doesn't affect orderbook
+          if (parsedData.data.u > depthSnapshot.data.lastUpdateId) {
+            // loop over orderbookChanges, use change[0] to find matching price in fullOrderbook
+            orderbookChanges.forEach(change => {
+              let foundLevelIndex = fullOrderbook.findIndex(
+                level => level[0] === change[0]
+              )
+              // if found: replace matchedPrice[1] with change[1];
+              // if not found: add new pricelevel to fullOrderbook
+              if (foundLevelIndex !== -1 && change[1] === '0.00000000') {
+                fullOrderbook.splice(foundLevelIndex, 1)
+              } else if (foundLevelIndex !== -1 && change[1] !== '0.00000000') {
+                fullOrderbook[foundLevelIndex][1] = change[1]
+              } else {
+                fullOrderbook.push(change)
+              }
+            })
+            // sort orderbook
+            fullOrderbook.sort(sortNumbersDesc)
+          }
 
           let priceAxis = fullOrderbook.map(el => {
             return parseFloat(el[0])

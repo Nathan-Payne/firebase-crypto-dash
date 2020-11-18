@@ -96,9 +96,9 @@ export default {
     backgroundColorArray() {
       let askColors = []
       let bidColors = []
-      for (let i = 0; i < this.$store.getters.getPriceAxis.length; i++) {
-        askColors.push('rgba(34, 221, 34, 1)')
-        bidColors.push('rgba(255, 34, 34, 1)')
+      for (let i = 0; i < this.$store.getters.getPriceAxis.length / 2; i++) {
+        askColors.push('rgba(255, 34, 34, 1)')
+        bidColors.push('rgba(34, 221, 34, 1)')
       }
       return [...askColors, ...bidColors]
     },
