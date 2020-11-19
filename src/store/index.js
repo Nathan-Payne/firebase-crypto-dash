@@ -4,8 +4,45 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 
-function sortNumbersDesc(a, b) {
+function sortArrayColumnDesc(a, b) {
   return b[0] - a[0]
+}
+function sortArrayColumnAsc(a, b) {
+  return a[0] - b[0]
+}
+
+function findNewBinStart(el, binStart, precision) {
+  let newBinStart
+  for (let i = binStart; i < 5000 * precision; i += precision)
+    if (+el[0] > i && +el[0] <= precision + i) {
+      newBinStart = i
+      break
+    }
+  return newBinStart
+}
+
+function createBinnedOrderbook(sortedOrderbook, precision) {
+  let binnedOrderbook = []
+  let binTotal = 0
+  let binStart = 0
+  let newBinStart = 0
+  for (let el of sortedOrderbook) {
+    let binEnd = binStart + precision
+    if (+el[0] > binStart && +el[0] <= binEnd) {
+      binTotal += +el[1]
+    }
+    if (+el[0] > binEnd) {
+      binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
+      newBinStart = findNewBinStart(el, binStart, precision)
+      binStart = newBinStart
+      binTotal = +el[1]
+    }
+    if (sortedOrderbook[sortedOrderbook.length - 1] === el) {
+      binEnd = binStart + precision
+      binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
+    }
+  }
+  return binnedOrderbook
 }
 
 export default new Vuex.Store({
@@ -87,7 +124,7 @@ export default new Vuex.Store({
           'https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=1000'
         )
         // static orderbook - initial state from rest api call
-        const asks = depthSnapshot.data.asks.sort(sortNumbersDesc)
+        const asks = depthSnapshot.data.asks.sort(sortArrayColumnDesc)
         const bids = depthSnapshot.data.bids
         fullOrderbook = [...asks, ...bids]
       } catch (err) {
@@ -156,13 +193,16 @@ export default new Vuex.Store({
               }
             })
             // sort orderbook
-            fullOrderbook.sort(sortNumbersDesc)
+            fullOrderbook.sort(sortArrayColumnAsc)
           }
+          let binnedOrderbook = createBinnedOrderbook(fullOrderbook, 10)
+          console.log(binnedOrderbook)
+          binnedOrderbook.sort(sortArrayColumnDesc)
 
-          let priceAxis = fullOrderbook.map(el => {
+          let priceAxis = binnedOrderbook.map(el => {
             return parseFloat(el[0])
           })
-          let amountAxis = fullOrderbook.map(el => {
+          let amountAxis = binnedOrderbook.map(el => {
             return parseFloat(el[1])
           })
           commit({
@@ -174,6 +214,7 @@ export default new Vuex.Store({
             dataArr: amountAxis,
           })
         }
+
         if (parsedData.stream == `btcusdt@kline_${chartInterval}`) {
           const candle = parsedData.data.k
           const currentCandle = {
@@ -194,6 +235,7 @@ export default new Vuex.Store({
         }
       }
     },
+
     async getCandlestickData(context, { interval }) {
       let response
       try {
