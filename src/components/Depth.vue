@@ -4,6 +4,7 @@
 
 <script>
 import Chart from 'chart.js'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'Depth',
@@ -47,7 +48,7 @@ export default {
                 },
                 ticks: {
                   beginAtZero: true,
-                  suggestedMax: 10,
+                  suggestedMax: 50,
                 },
                 scaleLabel: {
                   display: true,
@@ -68,6 +69,9 @@ export default {
                 },
                 ticks: {
                   precision: 2,
+                  callback: function(tick) {
+                    return Math.round(tick / 10) * 10
+                  },
                 },
               },
             ],
@@ -89,27 +93,32 @@ export default {
       return depthChart
     },
     fillData() {
-      this.chartData.data.labels = this.$store.getters.getPriceAxis
-      this.chartData.data.datasets[0].data = this.$store.getters.getAmountAxis
-      this.createdChart.update({ duration: 500 })
+      this.chartData.data.labels = this.getPriceAxis
+      this.chartData.data.datasets[0].data = this.getAmountAxis
+      this.chartData.data.datasets[0].backgroundColor = this.backgroundColorArray()
+      this.createdChart.update({ duration: 350 })
     },
     backgroundColorArray() {
       let askColors = []
       let bidColors = []
-      for (let i = 0; i < this.$store.getters.getPriceAxis.length / 2; i++) {
-        askColors.push('rgba(255, 34, 34, 1)')
-        bidColors.push('rgba(34, 221, 34, 1)')
+      const btcPrice = this.getBtcPrice
+      const priceAxis = this.$store.getters.getPriceAxis
+      for (let i = 0; i <= priceAxis.length; i++) {
+        if (priceAxis[i] > btcPrice) {
+          askColors.push('rgba(255, 34, 34, 1)')
+        }
+        if (priceAxis[i] < btcPrice) {
+          bidColors.push('rgba(34, 221, 34, 1)')
+        }
       }
       return [...askColors, ...bidColors]
     },
   },
   computed: {
-    storedChartData() {
-      return this.$store.getters.getAmountAxis
-    },
+    ...mapGetters(['getAmountAxis', 'getPriceAxis', 'getBtcPrice']),
   },
   watch: {
-    storedChartData: {
+    getPriceAxis: {
       handler: function() {
         this.fillData()
       },

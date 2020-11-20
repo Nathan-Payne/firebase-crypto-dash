@@ -13,35 +13,40 @@ function sortArrayColumnAsc(a, b) {
 
 function findNewBinStart(el, binStart, precision) {
   let newBinStart
-  for (let i = binStart; i < 5000 * precision; i += precision)
+  let emptyLevels = []
+  for (let i = binStart; i < 20000 * precision; i += precision) {
     if (+el[0] > i && +el[0] <= precision + i) {
       newBinStart = i
       break
     }
-  return newBinStart
+    emptyLevels.push([`${i}`, '0.00000000'])
+  }
+  return { newBinStart, emptyLevels }
 }
 
-function createBinnedOrderbook(sortedOrderbook, precision) {
+function createBinnedOrderbook(orderbook, precision, btcPrice) {
+  orderbook.sort(sortArrayColumnAsc)
   let binnedOrderbook = []
   let binTotal = 0
-  let binStart = 0
-  let newBinStart = 0
-  for (let el of sortedOrderbook) {
+  let binStart = Math.round((btcPrice - 1000) / precision)
+  for (let el of orderbook) {
     let binEnd = binStart + precision
     if (+el[0] > binStart && +el[0] <= binEnd) {
       binTotal += +el[1]
     }
     if (+el[0] > binEnd) {
       binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
-      newBinStart = findNewBinStart(el, binStart, precision)
+      const { newBinStart } = findNewBinStart(el, binStart, precision)
+      // binnedOrderbook.push(emptyLevels)
       binStart = newBinStart
       binTotal = +el[1]
     }
-    if (sortedOrderbook[sortedOrderbook.length - 1] === el) {
+    if (orderbook[orderbook.length - 1] === el) {
       binEnd = binStart + precision
       binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
     }
   }
+  binnedOrderbook.splice(0, 1)
   return binnedOrderbook
 }
 
@@ -118,7 +123,8 @@ export default new Vuex.Store({
         lastPrice: '',
         percentChange: '',
       }
-      let depthSnapshot, fullOrderbook
+      let depthSnapshot, fullOrderbook, btcPrice
+      let count = 0
       try {
         depthSnapshot = await axios.get(
           'https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=1000'
@@ -130,7 +136,6 @@ export default new Vuex.Store({
       } catch (err) {
         console.error(err)
       }
-      let count = 0
 
       const socket = await new WebSocket(
         `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20/btcusdt@depth/btcusdt@kline_${chartInterval}`
@@ -143,6 +148,7 @@ export default new Vuex.Store({
             lastPrice: parseFloat(parsedData.data.c).toFixed(2),
             percentChange: parseFloat(parsedData.data.P).toFixed(2),
           }
+          btcPrice = tickerInfo.lastPrice
           commit('updateTicker', tickerInfo)
         }
         if (parsedData.stream == 'ethusdt@ticker') {
@@ -153,52 +159,43 @@ export default new Vuex.Store({
           }
           commit('updateTicker', tickerInfo)
         }
-        // LIVE ORDERBOOK DATA THROUGH WEBSOCKET - ONLY FIRST 20 LEVELS
-        // if (parsedData.stream == 'btcusdt@depth20') {
-        //   const asks = parsedData.data.asks.sort(sortNumbersDesc)
-        //   const bids = parsedData.data.bids
-        //   const orderedBookArr = [...asks, ...bids]
-        //   let priceAxis = orderedBookArr.map(el => {
-        //     return parseFloat(el[0])
-        //   })
-        //   let amountAxis = orderedBookArr.map(el => {
-        //     return parseFloat(el[1])
-        //   })
-        //   commit({
-        //     type: 'updateDepthPrice',
-        //     dataArr: priceAxis,
-        //   })
-        //   commit({
-        //     type: 'updateDepthAmount',
-        //     dataArr: amountAxis,
-        //   })
-        // }
         if (parsedData.stream == 'btcusdt@depth') {
-          let orderbookChanges = [...parsedData.data.a, ...parsedData.data.b]
-          // ensure data recorded by websocket before REST API doesn't affect orderbook
-          if (parsedData.data.u > depthSnapshot.data.lastUpdateId) {
-            // loop over orderbookChanges, use change[0] to find matching price in fullOrderbook
-            orderbookChanges.forEach(change => {
-              let foundLevelIndex = fullOrderbook.findIndex(
-                level => level[0] === change[0]
-              )
-              // if found: replace matchedPrice[1] with change[1];
-              // if not found: add new pricelevel to fullOrderbook
-              if (foundLevelIndex !== -1 && change[1] === '0.00000000') {
-                fullOrderbook.splice(foundLevelIndex, 1)
-              } else if (foundLevelIndex !== -1 && change[1] !== '0.00000000') {
-                fullOrderbook[foundLevelIndex][1] = change[1]
-              } else {
-                fullOrderbook.push(change)
-              }
-            })
-            // sort orderbook
-            fullOrderbook.sort(sortArrayColumnAsc)
-          }
-          let binnedOrderbook = createBinnedOrderbook(fullOrderbook, 10)
-          console.log(binnedOrderbook)
-          binnedOrderbook.sort(sortArrayColumnDesc)
+          // let orderbookChanges = [...parsedData.data.a, ...parsedData.data.b]
+          // // ensure data recorded by websocket before REST API doesn't affect orderbook
+          // // if (parsedData.data.u > depthSnapshot.data.lastUpdateId) {
+          // //   // loop over orderbookChanges, use change[0] ('price') to find matching price in fullOrderbook
+          // //   orderbookChanges.forEach(change => {
+          // //     let foundLevelIndex = fullOrderbook.findIndex(
+          // //       level => level[0] === change[0]
+          // //     )
 
+          // //     // limiting number of levels processed
+          // //     // if (+change[0] > btcPrice + 1000) {
+          // //     //   console.log('outside', +change[0])
+          // //     // }
+          // //     // if (+change[0] < btcPrice - 1000) {
+          // //     //   console.log('outside below', +change[0])
+          // //     // }
+
+          // //     // if found: replace matchedPrice[1] ('amount) with change[1];
+          // //     // if not found: add new pricelevel to fullOrderbook
+          // //     // if (foundLevelIndex !== -1 && change[1] === '0.00000000') {
+          // //     //   fullOrderbook.splice(foundLevelIndex, 1)
+          // //     // }
+          // //     if (foundLevelIndex !== -1 && change[1] !== '0.00000000') {
+          // //       fullOrderbook[foundLevelIndex][1] = change[1]
+          // //     } else {
+          // //       fullOrderbook.push(change)
+          // //     }
+          // //   })
+          // //   //fullOrderbook.sort(sortArrayColumnAsc)
+          // // }
+          let binnedOrderbook = createBinnedOrderbook(
+            fullOrderbook,
+            10,
+            btcPrice
+          )
+          binnedOrderbook.sort(sortArrayColumnDesc)
           let priceAxis = binnedOrderbook.map(el => {
             return parseFloat(el[0])
           })
