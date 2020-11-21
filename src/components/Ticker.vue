@@ -6,6 +6,7 @@
     disable-pagination
     hide-default-footer
     no-data-text="Data not available at this time"
+    mobile-breakpoint="460"
     :headers="headers"
     :items="tickers"
     :item-class="rowHighlight"
@@ -16,17 +17,39 @@
 <script>
 export default {
   name: 'Ticker',
+  props: {
+    tickerType: {
+      type: String,
+      default: 'usdt',
+    },
+  },
   data() {
     return {
       headers: [
         { text: 'Pair', value: 'pair' },
         { text: 'Price', value: 'lastPrice' },
-        { text: '% Change', value: 'percentChange' },
+        { text: '24hr % Change', value: 'percentChange' },
       ],
-      tickers: this.$store.getters.getTickersArray,
+      tickers: [],
     }
   },
+  computed: {
+    getUsdtTickers() {
+      return this.$store.getters.getTickersArray.usdtArr
+    },
+    getBtcTickers() {
+      return this.$store.getters.getTickersArray.btcArr
+    },
+  },
   methods: {
+    getTickers() {
+      if (this.tickerType === 'usdt') {
+        return this.getUsdtTickers
+      }
+      if (this.tickerType === 'btc') {
+        return this.getBtcTickers
+      }
+    },
     rowHighlight(row) {
       if (parseFloat(row.percentChange) > 0) {
         return { 'green-border': true }
@@ -34,6 +57,9 @@ export default {
         return { 'red-border': true }
       }
     },
+  },
+  mounted() {
+    this.tickers = this.getTickers()
   },
 }
 </script>

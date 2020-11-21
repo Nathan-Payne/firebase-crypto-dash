@@ -13,7 +13,7 @@ function tickerUpdater(urlName, uppercaseName, parsedData) {
   if (parsedData.stream == `${urlName}@ticker`) {
     tickerInfo = {
       pair: uppercaseName,
-      lastPrice: parseFloat(parsedData.data.c).toFixed(2),
+      lastPrice: parseFloat(parsedData.data.c).toFixed(8),
       percentChange: parseFloat(parsedData.data.P).toFixed(2),
     }
   }
@@ -71,15 +71,27 @@ export default new Vuex.Store({
     loaded: false,
     chartInterval: '5m',
     depthSnapshotSize: 1000,
-    allTickers: [
+    allUsdtTickers: [
       { urlName: 'btcusdt', uppercaseName: 'BTCUSDT' },
       { urlName: 'ethusdt', uppercaseName: 'ETHUSDT' },
       { urlName: 'linkusdt', uppercaseName: 'LINKUSDT' },
       { urlName: 'adausdt', uppercaseName: 'ADAUSDT' },
     ],
-    tickers: {
+    allBtcTickers: [
+      { urlName: 'ethbtc', uppercaseName: 'ETHBTC' },
+      { urlName: 'linkbtc', uppercaseName: 'LINKBTC' },
+      { urlName: 'adabtc', uppercaseName: 'ADABTC' },
+    ],
+    usdtTickers: {
       BTCUSDT: {
         pair: 'BTCUSDT',
+        lastPrice: '',
+        percentChange: '',
+      },
+    },
+    btcTickers: {
+      ETHBTC: {
+        pair: 'ETHBTC',
         lastPrice: '',
         percentChange: '',
       },
@@ -96,29 +108,44 @@ export default new Vuex.Store({
     isLoaded: state => state.loaded,
     getChartInterval: state => state.chartInterval,
     getTickersArray: state => {
-      let arr = []
-      for (let ticker in state.tickers) {
-        arr.push(state.tickers[ticker])
+      let usdtArr = []
+      let btcArr = []
+      for (let ticker in state.usdtTickers) {
+        usdtArr.push(state.usdtTickers[ticker])
       }
-      return arr
+      for (let ticker in state.btcTickers) {
+        btcArr.push(state.btcTickers[ticker])
+      }
+      return { usdtArr, btcArr }
     },
     getPriceAxis: state => state.orderbookDepth.priceAxis,
     getAmountAxis: state => state.orderbookDepth.amountAxis,
     getCandlestickData: state => state.candlesticks,
-    getBtcPrice: state => state.tickers.BTCUSDT.lastPrice,
+    getBtcPrice: state => state.usdtTickers.BTCUSDT.lastPrice,
     getCurrentCandle: state => state.currentCandle,
   },
 
   mutations: {
     loaded: state => (state.loaded = true),
-    createTicker(state, initTicker) {
-      state.tickers[initTicker.pair] = initTicker
+    createUsdtTicker(state, initTicker) {
+      state.usdtTickers[initTicker.pair] = initTicker
+    },
+    createBtcTicker(state, initTicker) {
+      state.btcTickers[initTicker.pair] = initTicker
     },
     updateTicker(state, tickerInfo) {
-      for (let ticker in state.tickers) {
-        if (state.tickers[ticker].pair === tickerInfo.pair) {
-          state.tickers[ticker].lastPrice = tickerInfo.lastPrice
-          state.tickers[ticker].percentChange = tickerInfo.percentChange
+      for (let ticker in state.usdtTickers) {
+        if (state.usdtTickers[ticker].pair === tickerInfo.pair) {
+          state.usdtTickers[ticker].lastPrice = parseFloat(
+            tickerInfo.lastPrice
+          ).toPrecision(5)
+          state.usdtTickers[ticker].percentChange = tickerInfo.percentChange
+        }
+      }
+      for (let ticker in state.btcTickers) {
+        if (state.btcTickers[ticker].pair === tickerInfo.pair) {
+          state.btcTickers[ticker].lastPrice = tickerInfo.lastPrice
+          state.btcTickers[ticker].percentChange = tickerInfo.percentChange
         }
       }
     },
@@ -142,16 +169,29 @@ export default new Vuex.Store({
 
       let depthSnapshot, fullOrderbook, btcPrice
       let initialiseCount = 0
-      let allRequestedTickers = state.allTickers
+      let requestedUsdtTickers = state.allUsdtTickers
+      let requestedBtcTickers = state.allBtcTickers
+      let allRequestedTickers = [
+        ...state.allUsdtTickers,
+        ...state.allBtcTickers,
+      ]
 
       // add new ticker names to the websocket url and state.allTickers
-      for (let ticker of allRequestedTickers) {
+      for (let ticker of requestedUsdtTickers) {
         let initTicker = {
           pair: ticker.uppercaseName,
           lastPrice: '',
           percentChange: '',
         }
-        commit('createTicker', initTicker)
+        commit('createUsdtTicker', initTicker)
+      }
+      for (let ticker of requestedBtcTickers) {
+        let initTicker = {
+          pair: ticker.uppercaseName,
+          lastPrice: '',
+          percentChange: '',
+        }
+        commit('createBtcTicker', initTicker)
       }
 
       try {
@@ -167,7 +207,7 @@ export default new Vuex.Store({
       }
 
       const socket = await new WebSocket(
-        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcusdt@depth/btcusdt@kline_${chartInterval}`
+        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcbtc@ticker/ethbtc@ticker/linkbtc@ticker/adabtc@ticker/btcusdt@depth/btcusdt@kline_${chartInterval}`
       )
 
       socket.onmessage = event => {

@@ -6,15 +6,26 @@
         v-if="$store.getters.isLoaded"
       ></data-chart>
     </section>
-    <section id="ticker-section">
-      <data-ticker class="grid-item"></data-ticker>
-    </section>
     <section id="depth-section">
       <data-depth
         class="grid-item"
         :style="depthChartStyles"
         v-if="$store.getters.isLoaded"
       ></data-depth>
+    </section>
+    <section id="usdt-ticker-section">
+      <data-ticker
+        v-if="$store.getters.isLoaded"
+        class="grid-item"
+        :tickerType="'usdt'"
+      ></data-ticker>
+    </section>
+    <section id="btc-ticker-section">
+      <data-ticker
+        v-if="$store.getters.isLoaded"
+        class="grid-item"
+        :tickerType="'btc'"
+      ></data-ticker>
     </section>
   </v-container>
 </template>
@@ -54,15 +65,18 @@ export default {
   width: 100%;
   height: 100%;
 }
-#ticker-section {
-  grid-area: tk;
-}
 #depth-section {
   grid-area: dt;
   justify-self: end;
   position: relative;
   height: 90vh;
   width: 100%;
+}
+#usdt-ticker-section {
+  grid-area: tu;
+}
+#btc-ticker-section {
+  grid-area: tb;
 }
 .container {
   height: 100%;
@@ -74,7 +88,7 @@ export default {
   grid-template-areas:
     'ct ct ct ct ct ct ct ct dt dt'
     'ct ct ct ct ct ct ct ct dt dt'
-    'tk tk tk tk  .  .  .  . dt dt';
+    'tu tu tu tu tb tb tb tb dt dt';
 }
 .grid-item {
   padding-top: 1rem;
@@ -82,14 +96,12 @@ export default {
 
 @media (max-width: 768px) {
   .container {
-    gap: 0.5rem;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    grid-template-areas:
-      'ct ct ct ct ct ct ct ct '
-      'ct ct ct ct ct ct ct ct '
-      'tk tk tk tk dt dt dt dt '
-      'tk tk tk tk dt dt dt dt ';
+    display: flex;
+    flex-direction: column;
+  }
+  #chart-section .chart-size {
+    width: 90vw;
+    height: 90vh;
   }
 }
 </style>
