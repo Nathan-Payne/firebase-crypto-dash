@@ -7,11 +7,16 @@ export default new Vuetify({
   theme: {
     themes: {
       light: {
-        'c-1': '#14ffec',
-        'c-2': '#0d7377',
-        'c-3': '#323232',
-        'c-4': '#212121',
+        primary: '#14ffec',
+        secondary: '#0d7377',
+        accent: '#FF9800',
+        dark: '#323232',
+        darker: '#212121',
       },
     },
   },
 })
+
+// chart green: rgba(34, 221, 34, 1)
+// chart red: rgba(255, 34, 34, 1)
+// chart dark: #181818

@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="c-3" flat dense>
+    <v-app-bar app color="dark" flat dense>
       <v-toolbar-title class="white--text px-10"
         >Bitcoin Perspective</v-toolbar-title
       >
@@ -10,7 +10,7 @@
 
     <v-navigation-drawer
       dark
-      color="c-3"
+      color="dark"
       floating
       expand-on-hover
       width="160"
@@ -40,7 +40,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-main class="c-4">
+    <v-main class="darker">
       <router-view></router-view>
     </v-main>
   </v-app>

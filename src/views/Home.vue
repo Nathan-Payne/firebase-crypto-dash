@@ -74,15 +74,22 @@ export default {
   grid-template-areas:
     'ct ct ct ct ct ct ct ct dt dt'
     'ct ct ct ct ct ct ct ct dt dt'
-    'tk tk tk  .  .  .  .  . dt dt';
+    'tk tk tk tk  .  .  .  . dt dt';
 }
 .grid-item {
   padding-top: 1rem;
 }
 
-/* @media (max-width: 1300px) {
-  #depth-section {
-    width: 250px;
+@media (max-width: 768px) {
+  .container {
+    gap: 0.5rem;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    grid-template-areas:
+      'ct ct ct ct ct ct ct ct '
+      'ct ct ct ct ct ct ct ct '
+      'tk tk tk tk dt dt dt dt '
+      'tk tk tk tk dt dt dt dt ';
   }
-} */
+}
 </style>
