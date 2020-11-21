@@ -4,6 +4,22 @@ import axios from 'axios'
 
 Vue.use(Vuex)
 
+function tickerUpdater(urlName, uppercaseName, parsedData) {
+  let tickerInfo = {
+    pair: '',
+    lastPrice: '',
+    percentChange: '',
+  }
+  if (parsedData.stream == `${urlName}@ticker`) {
+    tickerInfo = {
+      pair: uppercaseName,
+      lastPrice: parseFloat(parsedData.data.c).toFixed(2),
+      percentChange: parseFloat(parsedData.data.P).toFixed(2),
+    }
+  }
+  return tickerInfo
+}
+
 function sortArrayColumnDesc(a, b) {
   return b[0] - a[0]
 }
@@ -14,7 +30,7 @@ function sortArrayColumnAsc(a, b) {
 function findNewBinStart(el, binStart, precision) {
   let newBinStart
   let emptyLevels = []
-  for (let i = binStart; i < 20000 * precision; i += precision) {
+  for (let i = binStart; i < 2000 * precision; i += precision) {
     if (+el[0] > i && +el[0] <= precision + i) {
       newBinStart = i
       break
@@ -28,6 +44,7 @@ function createBinnedOrderbook(orderbook, precision, btcPrice) {
   orderbook.sort(sortArrayColumnAsc)
   let binnedOrderbook = []
   let binTotal = 0
+  // start at bin $1000 below current price
   let binStart = Math.round((btcPrice - 1000) / precision)
   for (let el of orderbook) {
     let binEnd = binStart + precision
@@ -35,18 +52,17 @@ function createBinnedOrderbook(orderbook, precision, btcPrice) {
       binTotal += +el[1]
     }
     if (+el[0] > binEnd) {
-      binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
+      binnedOrderbook.push([`${binStart}`, `${binTotal}`])
       const { newBinStart } = findNewBinStart(el, binStart, precision)
       // binnedOrderbook.push(emptyLevels)
       binStart = newBinStart
       binTotal = +el[1]
     }
     if (orderbook[orderbook.length - 1] === el) {
-      binEnd = binStart + precision
-      binnedOrderbook.push([`${binEnd}`, `${binTotal}`])
+      binnedOrderbook.push([`${binStart}`, `${binTotal}`])
     }
   }
-  binnedOrderbook.splice(0, 1)
+  binnedOrderbook.splice(0, 1) //remove init level
   return binnedOrderbook
 }
 
@@ -54,14 +70,16 @@ export default new Vuex.Store({
   state: {
     loaded: false,
     chartInterval: '5m',
+    depthSnapshotSize: 1000,
+    allTickers: [
+      { urlName: 'btcusdt', uppercaseName: 'BTCUSDT' },
+      { urlName: 'ethusdt', uppercaseName: 'ETHUSDT' },
+      { urlName: 'linkusdt', uppercaseName: 'LINKUSDT' },
+      { urlName: 'adausdt', uppercaseName: 'ADAUSDT' },
+    ],
     tickers: {
       BTCUSDT: {
         pair: 'BTCUSDT',
-        lastPrice: '',
-        percentChange: '',
-      },
-      ETHUSDT: {
-        pair: 'ETHUSDT',
         lastPrice: '',
         percentChange: '',
       },
@@ -93,6 +111,9 @@ export default new Vuex.Store({
 
   mutations: {
     loaded: state => (state.loaded = true),
+    createTicker(state, initTicker) {
+      state.tickers[initTicker.pair] = initTicker
+    },
     updateTicker(state, tickerInfo) {
       for (let ticker in state.tickers) {
         if (state.tickers[ticker].pair === tickerInfo.pair) {
@@ -116,18 +137,26 @@ export default new Vuex.Store({
   },
 
   actions: {
-    async callBinanceSocket({ commit }, { chartInterval }) {
+    async callBinanceSocket({ commit, state }, { chartInterval }) {
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
-      let tickerInfo = {
-        pair: '',
-        lastPrice: '',
-        percentChange: '',
-      }
+
       let depthSnapshot, fullOrderbook, btcPrice
-      let count = 0
+      let initialiseCount = 0
+      let allRequestedTickers = state.allTickers
+
+      // add new ticker names to the websocket url and state.allTickers
+      for (let ticker of allRequestedTickers) {
+        let initTicker = {
+          pair: ticker.uppercaseName,
+          lastPrice: '',
+          percentChange: '',
+        }
+        commit('createTicker', initTicker)
+      }
+
       try {
         depthSnapshot = await axios.get(
-          'https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=1000'
+          `https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=${state.depthSnapshotSize}`
         )
         // static orderbook - initial state from rest api call
         const asks = depthSnapshot.data.asks.sort(sortArrayColumnDesc)
@@ -138,28 +167,25 @@ export default new Vuex.Store({
       }
 
       const socket = await new WebSocket(
-        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/btcusdt@depth20/btcusdt@depth/btcusdt@kline_${chartInterval}`
+        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcusdt@depth/btcusdt@kline_${chartInterval}`
       )
+
       socket.onmessage = event => {
         const parsedData = JSON.parse(event.data)
-        if (parsedData.stream == 'btcusdt@ticker') {
-          tickerInfo = {
-            pair: 'BTCUSDT',
-            lastPrice: parseFloat(parsedData.data.c).toFixed(2),
-            percentChange: parseFloat(parsedData.data.P).toFixed(2),
-          }
-          btcPrice = tickerInfo.lastPrice
+        allRequestedTickers.forEach(ticker => {
+          let tickerInfo = tickerUpdater(
+            ticker.urlName,
+            ticker.uppercaseName,
+            parsedData
+          )
           commit('updateTicker', tickerInfo)
-        }
-        if (parsedData.stream == 'ethusdt@ticker') {
-          tickerInfo = {
-            pair: 'ETHUSDT',
-            lastPrice: parseFloat(parsedData.data.c).toFixed(2),
-            percentChange: parseFloat(parsedData.data.P).toFixed(2),
+          if (ticker.uppercaseName === 'BTCUSDT') {
+            btcPrice = tickerInfo.lastPrice
           }
-          commit('updateTicker', tickerInfo)
-        }
+        })
+
         if (parsedData.stream == 'btcusdt@depth') {
+          // REALTIME ORDERBOOK DATA UPDATE
           // let orderbookChanges = [...parsedData.data.a, ...parsedData.data.b]
           // // ensure data recorded by websocket before REST API doesn't affect orderbook
           // // if (parsedData.data.u > depthSnapshot.data.lastUpdateId) {
@@ -224,11 +250,11 @@ export default new Vuex.Store({
           commit('updateCurrentCandle', currentCandle)
         }
         //ensure data fully loaded and streaming
-        if (count > 1 && count < 5) {
+        if (initialiseCount > 1 && initialiseCount < 5) {
           commit('loaded')
         }
-        if (count < 5) {
-          count++
+        if (initialiseCount < 5) {
+          initialiseCount++
         }
       }
     },

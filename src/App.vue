@@ -55,7 +55,7 @@ export default {
   data: () => ({
     showMenu: false,
   }),
-  mounted() {
+  created() {
     let chartInterval = this.$store.getters.getChartInterval
     this.$store.dispatch('callBinanceSocket', { chartInterval })
     this.$store.dispatch('getCandlestickData', { interval: chartInterval })
