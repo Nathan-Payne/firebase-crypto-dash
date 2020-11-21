@@ -5,21 +5,22 @@
         >Bitcoin Perspective</v-toolbar-title
       >
       <v-spacer></v-spacer>
-      <!-- <v-app-bar-nav-icon @click="showMenu = true"></v-app-bar-nav-icon> -->
+      <v-app-bar-nav-icon
+        @click="showMenu = !showMenu"
+        color="white"
+      ></v-app-bar-nav-icon>
     </v-app-bar>
 
     <v-navigation-drawer
       dark
       color="dark"
-      floating
-      expand-on-hover
       width="160"
       height="85"
-      mini-variant-width="40"
-      permanent
       absolute
-      class="nav-position"
+      class="nav-location"
+      temporary
       right
+      v-model="showMenu"
     >
       <v-list nav dense class="ma-0 pa-0">
         <v-list-item-group active-class="active-link">
@@ -67,9 +68,8 @@ export default {
 .active-link {
   background-color: #0d7377;
 }
-.nav-position {
+.nav-location {
   position: absolute;
-  top: 45vh !important;
-  border-radius: 10px;
+  top: 8vh !important;
 }
 </style>
