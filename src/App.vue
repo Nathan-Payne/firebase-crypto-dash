@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar app color="dark" flat dense>
-      <v-toolbar-title class="white--text px-10"
+      <v-toolbar-title class="white--text pl-10 font-weight-bold"
         >Bitcoin Perspective</v-toolbar-title
       >
       <v-spacer></v-spacer>
@@ -16,7 +16,7 @@
       color="dark"
       width="160"
       height="85"
-      absolute
+      fixed
       class="nav-location"
       temporary
       right
