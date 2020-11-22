@@ -21,7 +21,7 @@
             >
             and displays it in several formats. Where needed the data is
             manipulated into a more presentable/useful format (such as the
-            orderbook being shown in a non-cumulative way).
+            orderbook being shown in summed ranges).
           </p>
           <p class="mt-6">
             This is a personal project I work on in my spare time and will
@@ -193,11 +193,34 @@
         </v-col>
       </v-row>
     </v-container>
+    <v-btn
+      id="top-shortcut"
+      dark
+      fab
+      button
+      small
+      fixed
+      :color="topButtonColor"
+      class="elevation-8"
+      @click="$vuetify.goTo(0, options)"
+      @mouseenter="topButtonColor = 'white'"
+      @mouseleave="topButtonColor = 'accent'"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+      >
+        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+      </svg>
+    </v-btn>
   </div>
 </template>
 
 <script>
 import Ticker from '../components/Ticker'
+
 export default {
   name: 'About',
   components: {
@@ -206,6 +229,12 @@ export default {
   data() {
     return {
       binanceLogo: require('../assets/binanceLogo.svg'),
+      options: {
+        duration: 300,
+        offset: 0,
+        easing: 'easeInOutCubic',
+      },
+      topButtonColor: 'accent',
     }
   },
 }
@@ -214,6 +243,11 @@ export default {
 <style>
 #binance-logo {
   width: 90%;
+}
+#top-shortcut {
+  bottom: 1rem;
+  right: 1rem;
+  transition: all 200ms ease-out;
 }
 
 /* UTILITY CLASSES */

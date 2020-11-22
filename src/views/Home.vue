@@ -80,9 +80,9 @@ export default {
 }
 .container {
   height: 100%;
-  padding: 1rem;
+  padding: 1rem 1rem 0rem 1rem;
   display: grid;
-  gap: 0.8rem;
+  gap: 0.7rem;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(3, 1fr);
   grid-template-areas:
