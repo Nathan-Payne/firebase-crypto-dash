@@ -229,6 +229,7 @@ import Ticker from '../components/Ticker'
 
 export default {
   name: 'About',
+  title: 'Bitcoin Perspective | About',
   components: {
     'data-ticker': Ticker,
   },

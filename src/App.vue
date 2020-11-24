@@ -65,6 +65,7 @@ Chart.defaults.global.legend.display = false
 
 export default {
   name: 'App',
+  title: 'Foo',
   data: () => ({
     showMenu: false,
   }),

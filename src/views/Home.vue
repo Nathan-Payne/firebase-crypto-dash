@@ -38,6 +38,7 @@ import Depth from '@/components/Depth'
 
 export default {
   name: 'Home',
+  title: 'Bitcoin Perspective | A Bitcoin Data Dashboard',
   components: {
     'data-chart': Chart,
     'data-ticker': Ticker,
