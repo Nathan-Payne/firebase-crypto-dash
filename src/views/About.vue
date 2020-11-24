@@ -1,16 +1,17 @@
 <template>
   <div class="white--text">
-    <v-container class="h-screen pt-16 mb-16 mb-md-0 px-14" fluid>
+    <v-container class="min-h-screen px-14 py-16 d-flex flex-column" fluid>
+      <div class="pa-md-12">
+        <h1 class="display-3 font-weight-bold">About</h1>
+        <h3 class="display-1 mt-6">Binance Orderbooks, Prices, Chart Data</h3>
+      </div>
       <v-row no-gutters>
-        <v-col cols="12">
-          <h1 class="display-3 font-weight-bold">About</h1>
-        </v-col>
-        <v-col cols="12">
-          <h3 class="display-1 mt-6">Binance Orderbooks, Prices, Chart Data</h3>
-        </v-col>
-      </v-row>
-      <v-row no-gutters class="mt-16">
-        <v-col cols="12" md="6" class="leading-relaxed">
+        <v-col
+          cols="12"
+          md="6"
+          lg="5"
+          class="pt-12 pa-md-12 leading-relaxed d-flex flex-column align-center "
+        >
           <p>
             This site pulls data from the
             <a
@@ -36,22 +37,25 @@
             >.
           </p>
         </v-col>
-        <v-col
-          cols="12"
-          md="6"
-          class="d-flex mt-10 mt-md-0 align-center justify-center"
-        >
-          <img id="binance-logo" :src="binanceLogo" alt="Binance Logo" />
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="6" class=" mt-10 mt-md-0">
+          <img
+            id="binance-logo"
+            :src="binanceLogo"
+            alt="Binance Logo"
+            class="mt-md-16"
+          />
         </v-col>
       </v-row>
+      <v-spacer></v-spacer>
     </v-container>
     <!-- LIGHTWEIGHT CHARTS -->
     <v-container class="h-screen px-14 dark" fluid>
       <v-row
         no-gutters
-        class="fill-height d-flex justify-md-center align-center"
+        class="fill-height pb-16 d-flex justify-md-center align-center"
       >
-        <v-col cols="12" md="6" class="d-flex flex-column align-left">
+        <v-col cols="12" md="4" class="d-flex flex-column align-md-end">
           <svg
             width="92"
             height="56"
@@ -68,7 +72,8 @@
           </svg>
           <h2 class="display-2 font-weight-bold mt-10">Lightweight Charts</h2>
         </v-col>
-        <v-col cols="12" md="6" class="mt-n16 mt-md-6 leading-relaxed">
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="5" class="pa-md-16 mt-n16 mt-md-6 leading-relaxed">
           <p>
             <a
               href="https://www.tradingview.com/lightweight-charts/"
@@ -93,11 +98,12 @@
             values of the latest candlestick.
           </p>
         </v-col>
+        <v-spacer></v-spacer>
       </v-row>
     </v-container>
     <!-- CHARTS.JS ORDERBOOK DPETH CHART -->
-    <v-container class="h-full px-14" fluid>
-      <v-row class="mt-16">
+    <v-container class="min-h-screen px-14 d-flex align-center" fluid>
+      <v-row class="pb-16">
         <v-col cols="12" md="8">
           <v-row no-gutters>
             <v-col cols="12">
@@ -155,22 +161,22 @@
       </v-row>
     </v-container>
     <!-- TICKERS + WEBSOCKET -->
-    <v-container class="h-screen px-14 dark" fluid>
-      <v-row
-        no-gutters
-        class="fill-height d-flex justify-md-center align-center"
-      >
+    <v-container
+      class="min-h-screen px-14 pb-16 dark d-flex align-center"
+      fluid
+    >
+      <v-row no-gutters class=" d-flex justify-md-center align-center">
         <v-col
           cols="12"
           md="6"
-          class="d-flex flex-column align-left justify-space-between"
+          class="pa-md-16 d-flex flex-column align-left justify-space-between"
         >
           <h2 class="display-3 mt-10 font-weight-bold">Live Tickers</h2>
           <div class="mt-16 pr-16">
             <data-ticker />
           </div>
         </v-col>
-        <v-col cols="12" md="6" class="mt-6 leading-relaxed">
+        <v-col cols="12" md="6" class="mt-6 pt-16 pa-md-16 leading-relaxed">
           <p>
             Realtime price tickers for a variety of assets are included from the
             <a
@@ -256,6 +262,9 @@ export default {
 }
 .h-full {
   height: 100%;
+}
+.min-h-screen {
+  min-height: 100vh;
 }
 .relative {
   position: relative;
