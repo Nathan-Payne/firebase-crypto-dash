@@ -115,10 +115,10 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['getAmountAxis', 'getPriceAxis', 'getBtcPrice']),
+    ...mapGetters(['isLoaded', 'getAmountAxis', 'getPriceAxis', 'getBtcPrice']),
   },
   watch: {
-    getPriceAxis: {
+    getBtcPrice: {
       handler: function() {
         this.fillData()
       },

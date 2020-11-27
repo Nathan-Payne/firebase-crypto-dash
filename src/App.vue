@@ -71,6 +71,7 @@ export default {
   }),
   created() {
     let chartInterval = this.$store.getters.getChartInterval
+    this.$store.dispatch('getOrderbookSnapshot')
     this.$store.dispatch('callBinanceSocket', { chartInterval })
     this.$store.dispatch('getCandlestickData', { interval: chartInterval })
   },

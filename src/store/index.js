@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import axios from 'axios'
+import historicalCandlesticks from './modules/historicalCandlesticks'
+import orderbookSnapshot from './modules/orderbook'
 
 Vue.use(Vuex)
 
@@ -16,61 +17,16 @@ function tickerUpdater(urlName, uppercaseName, parsedData) {
       lastPrice: parseFloat(parsedData.data.c).toFixed(8),
       percentChange: parseFloat(parsedData.data.P).toFixed(2),
     }
+  } else {
+    return
   }
   return tickerInfo
-}
-
-function sortArrayColumnDesc(a, b) {
-  return b[0] - a[0]
-}
-function sortArrayColumnAsc(a, b) {
-  return a[0] - b[0]
-}
-
-function findNewBinStart(el, binStart, precision) {
-  let newBinStart
-  let emptyLevels = []
-  for (let i = binStart; i < 2000 * precision; i += precision) {
-    if (+el[0] > i && +el[0] <= precision + i) {
-      newBinStart = i
-      break
-    }
-    emptyLevels.push([`${i}`, '0.00000000'])
-  }
-  return { newBinStart, emptyLevels }
-}
-
-function createBinnedOrderbook(orderbook, precision, btcPrice) {
-  orderbook.sort(sortArrayColumnAsc)
-  let binnedOrderbook = []
-  let binTotal = 0
-  // start at bin $1000 below current price
-  let binStart = Math.round((btcPrice - 1000) / precision)
-  for (let el of orderbook) {
-    let binEnd = binStart + precision
-    if (+el[0] > binStart && +el[0] <= binEnd) {
-      binTotal += +el[1]
-    }
-    if (+el[0] > binEnd) {
-      binnedOrderbook.push([`${binStart}`, `${binTotal}`])
-      const { newBinStart } = findNewBinStart(el, binStart, precision)
-      // binnedOrderbook.push(emptyLevels)
-      binStart = newBinStart
-      binTotal = +el[1]
-    }
-    if (orderbook[orderbook.length - 1] === el) {
-      binnedOrderbook.push([`${binStart}`, `${binTotal}`])
-    }
-  }
-  binnedOrderbook.splice(0, 1) //remove init level
-  return binnedOrderbook
 }
 
 export default new Vuex.Store({
   state: {
     loaded: false,
     chartInterval: '5m',
-    depthSnapshotSize: 1000,
     allUsdtTickers: [
       { urlName: 'btcusdt', uppercaseName: 'BTCUSDT' },
       { urlName: 'ethusdt', uppercaseName: 'ETHUSDT' },
@@ -96,11 +52,6 @@ export default new Vuex.Store({
         percentChange: '',
       },
     },
-    orderbookDepth: {
-      priceAxis: [],
-      amountAxis: [],
-    },
-    candlesticks: [],
     currentCandle: {},
   },
 
@@ -118,9 +69,6 @@ export default new Vuex.Store({
       }
       return { usdtArr, btcArr }
     },
-    getPriceAxis: state => state.orderbookDepth.priceAxis,
-    getAmountAxis: state => state.orderbookDepth.amountAxis,
-    getCandlestickData: state => state.candlesticks,
     getBtcPrice: state => state.usdtTickers.BTCUSDT.lastPrice,
     getCurrentCandle: state => state.currentCandle,
   },
@@ -149,15 +97,6 @@ export default new Vuex.Store({
         }
       }
     },
-    updateDepthPrice(state, priceAxis) {
-      state.orderbookDepth.priceAxis = priceAxis.dataArr
-    },
-    updateDepthAmount(state, amountAxis) {
-      state.orderbookDepth.amountAxis = amountAxis.dataArr
-    },
-    getCandlestickData(state, formattedCandlesticks) {
-      state.candlesticks = formattedCandlesticks
-    },
     updateCurrentCandle(state, currentCandle) {
       state.currentCandle = currentCandle
     },
@@ -166,8 +105,6 @@ export default new Vuex.Store({
   actions: {
     async callBinanceSocket({ commit, state }, { chartInterval }) {
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
-
-      let depthSnapshot, fullOrderbook, btcPrice
       let initialiseCount = 0
       let requestedUsdtTickers = state.allUsdtTickers
       let requestedBtcTickers = state.allBtcTickers
@@ -194,18 +131,6 @@ export default new Vuex.Store({
         commit('createBtcTicker', initTicker)
       }
 
-      try {
-        depthSnapshot = await axios.get(
-          `https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=${state.depthSnapshotSize}`
-        )
-        // static orderbook - initial state from rest api call
-        const asks = depthSnapshot.data.asks.sort(sortArrayColumnDesc)
-        const bids = depthSnapshot.data.bids
-        fullOrderbook = [...asks, ...bids]
-      } catch (err) {
-        console.error(err)
-      }
-
       const socket = await new WebSocket(
         `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcbtc@ticker/ethbtc@ticker/linkbtc@ticker/adabtc@ticker/btcusdt@depth/btcusdt@kline_${chartInterval}`
       )
@@ -218,10 +143,12 @@ export default new Vuex.Store({
             ticker.uppercaseName,
             parsedData
           )
-          commit('updateTicker', tickerInfo)
-          if (ticker.uppercaseName === 'BTCUSDT') {
-            btcPrice = tickerInfo.lastPrice
+          if (typeof tickerInfo !== 'undefined') {
+            commit('updateTicker', tickerInfo)
           }
+          // if (ticker.uppercaseName === 'BTCUSDT') {
+          //   btcPrice = tickerInfo.lastPrice
+          // }
         })
 
         if (parsedData.stream == 'btcusdt@depth') {
@@ -234,7 +161,6 @@ export default new Vuex.Store({
           // //     let foundLevelIndex = fullOrderbook.findIndex(
           // //       level => level[0] === change[0]
           // //     )
-
           // //     // limiting number of levels processed
           // //     // if (+change[0] > btcPrice + 1000) {
           // //     //   console.log('outside', +change[0])
@@ -242,7 +168,6 @@ export default new Vuex.Store({
           // //     // if (+change[0] < btcPrice - 1000) {
           // //     //   console.log('outside below', +change[0])
           // //     // }
-
           // //     // if found: replace matchedPrice[1] ('amount) with change[1];
           // //     // if not found: add new pricelevel to fullOrderbook
           // //     // if (foundLevelIndex !== -1 && change[1] === '0.00000000') {
@@ -256,28 +181,8 @@ export default new Vuex.Store({
           // //   })
           // //   //fullOrderbook.sort(sortArrayColumnAsc)
           // // }
-          let binnedOrderbook = createBinnedOrderbook(
-            fullOrderbook,
-            10,
-            btcPrice
-          )
-          binnedOrderbook.sort(sortArrayColumnDesc)
-          let priceAxis = binnedOrderbook.map(el => {
-            return parseFloat(el[0])
-          })
-          let amountAxis = binnedOrderbook.map(el => {
-            return parseFloat(el[1])
-          })
-          commit({
-            type: 'updateDepthPrice',
-            dataArr: priceAxis,
-          })
-          commit({
-            type: 'updateDepthAmount',
-            dataArr: amountAxis,
-          })
         }
-
+        // Live candlestick data for current candle
         if (parsedData.stream == `btcusdt@kline_${chartInterval}`) {
           const candle = parsedData.data.k
           const currentCandle = {
@@ -289,7 +194,8 @@ export default new Vuex.Store({
           }
           commit('updateCurrentCandle', currentCandle)
         }
-        //ensure data fully loaded and streaming
+
+        //ensure data fully loaded and streaming before chart initialisation
         if (initialiseCount > 1 && initialiseCount < 5) {
           commit('loaded')
         }
@@ -298,29 +204,10 @@ export default new Vuex.Store({
         }
       }
     },
-
-    async getCandlestickData(context, { interval }) {
-      let response
-      try {
-        response = await axios.get(
-          `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}`
-        )
-      } catch (err) {
-        console.error(err)
-      }
-      const formattedCandlesticks = response.data.map(stick => {
-        return {
-          time: parseFloat(stick[0]) / 1000,
-          open: parseFloat(stick[1]),
-          high: parseFloat(stick[2]),
-          low: parseFloat(stick[3]),
-          close: parseFloat(stick[4]),
-          volume: parseFloat(stick[5]),
-        }
-      })
-      context.commit('getCandlestickData', formattedCandlesticks)
-    },
   },
 
-  modules: {},
+  modules: {
+    orderbookSnapshot,
+    historicalCandlesticks,
+  },
 })
