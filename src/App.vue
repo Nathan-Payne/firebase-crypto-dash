@@ -61,6 +61,7 @@
 
 <script>
 import { Chart } from 'chart.js'
+import { mapActions } from 'vuex'
 Chart.defaults.global.legend.display = false
 
 export default {
@@ -69,9 +70,18 @@ export default {
   data: () => ({
     showMenu: false,
   }),
+  methods: {
+    ...mapActions([
+      'initTickers',
+      'getOrderbookSnapshot',
+      'callBinanceSocket',
+      'getCandlestickData',
+    ]),
+  },
   created() {
     let chartInterval = this.$store.getters.getChartInterval
-    this.$store.dispatch('getOrderbookSnapshot')
+    this.initTickers()
+    this.getOrderbookSnapshot()
     this.$store.dispatch('callBinanceSocket', { chartInterval })
     this.$store.dispatch('getCandlestickData', { interval: chartInterval })
   },

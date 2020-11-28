@@ -93,7 +93,7 @@
           </p>
           <p class="mt-6">
             The data is sourced from both the REST API and the Binance
-            websocket. The RSET API provides the historical candlesticks while
+            websocket. The REST API provides the historical candlesticks while
             the websocket provides update to the open, high, low and close
             values of the latest candlestick.
           </p>
@@ -104,7 +104,7 @@
     <!-- CHARTS.JS ORDERBOOK DPETH CHART -->
     <v-container class="min-h-screen px-14 d-flex align-center" fluid>
       <v-row class="pb-16">
-        <v-col cols="12" md="8">
+        <v-col cols="12" md="8" class="pa-md-12">
           <v-row no-gutters>
             <v-col cols="12">
               <h1 class="display-3 font-weight-bold">Charts.js</h1>
