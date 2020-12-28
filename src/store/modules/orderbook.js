@@ -4,7 +4,7 @@ import { createBinnedOrderbook } from '../../utils/orderbook'
 
 const orderbookSnapshot = {
   state: {
-    depthSnapshotSize: 1000,
+    depthSnapshotSize: 5000,
     orderbookDepth: {
       priceAxis: [],
       amountAxis: [],

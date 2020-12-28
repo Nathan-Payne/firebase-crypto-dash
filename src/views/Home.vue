@@ -31,7 +31,6 @@
 </template>
 
 <script>
-// @ is an alias to /src
 import Chart from '@/components/Chart'
 import Ticker from '@/components/Ticker'
 import Depth from '@/components/Depth'

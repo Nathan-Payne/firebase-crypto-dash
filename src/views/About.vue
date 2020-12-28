@@ -1,5 +1,5 @@
 <template>
-  <div class="white--text">
+  <div class="white--text text-lg-body-1">
     <v-container class="min-h-screen px-14 py-16 d-flex flex-column" fluid>
       <div class="pa-md-12">
         <h1 class="display-3 font-weight-bold">About</h1>

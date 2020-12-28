@@ -5,7 +5,10 @@ export default {
   getters: {},
   mutations: {},
   actions: {
-    async callBinanceSocket({ commit, rootState }, { chartInterval }) {
+    async callBinanceSocket(
+      { commit, dispatch, rootState },
+      { chartInterval }
+    ) {
       //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       let initialiseCount = 0
       let allRequestedTickers = [
@@ -75,10 +78,11 @@ export default {
         }
 
         //ensure data fully loaded and streaming before chart initialisation
-        if (initialiseCount > 1 && initialiseCount < 5) {
+        if (initialiseCount > 1 && initialiseCount < 3) {
           commit('loaded')
+          dispatch('getOrderbookSnapshot')
         }
-        if (initialiseCount < 5) {
+        if (initialiseCount < 3) {
           initialiseCount++
         }
       }
