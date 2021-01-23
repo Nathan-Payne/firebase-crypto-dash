@@ -18,48 +18,55 @@ const orderbookSnapshot = {
 
   mutations: {
     updateDepthPrice(state, priceAxis) {
-      state.orderbookDepth.priceAxis = priceAxis.dataArr
+      state.orderbookDepth.priceAxis = priceAxis.payload
     },
     updateDepthAmount(state, amountAxis) {
-      state.orderbookDepth.amountAxis = amountAxis.dataArr
+      state.orderbookDepth.amountAxis = amountAxis.payload
     },
   },
 
   actions: {
     async getOrderbookSnapshot({ commit, state, rootGetters }) {
-      let fullOrderbook
+      let fullOrderbookArray
+      let orderbookObject
+      const orderbookBinSize = 20
       try {
         const depthSnapshot = await axios.get(
           `https://www.binance.com/api/v3/depth?symbol=BTCUSDT&limit=${state.depthSnapshotSize}`
         )
         // static orderbook - initial state from rest api call
-        const asks = depthSnapshot.data.asks.sort(sortArrayColumnDesc)
+        const asks = depthSnapshot.data.asks
         const bids = depthSnapshot.data.bids
-        fullOrderbook = [...asks, ...bids]
+        fullOrderbookArray = [...asks, ...bids]
+        orderbookObject = fullOrderbookArray.reduce((obj, [level, price]) => {
+          obj[level] = +price
+          return obj
+        }, {})
       } catch (err) {
         console.error(err)
       }
-
-      let binnedOrderbook = createBinnedOrderbook(
-        fullOrderbook,
-        10,
+      let binnedOrderbookObj = createBinnedOrderbook(
+        orderbookObject,
+        orderbookBinSize,
         rootGetters.getBtcPrice
       )
-      binnedOrderbook.sort(sortArrayColumnDesc)
 
-      let priceAxis = binnedOrderbook.map(el => {
+      let binnedOrderbookArr = Object.entries(binnedOrderbookObj) // returns [[key, val], [key, val], ...]
+      binnedOrderbookArr.sort(sortArrayColumnDesc)
+
+      let priceAxis = binnedOrderbookArr.map(el => {
         return parseFloat(el[0])
       })
-      let amountAxis = binnedOrderbook.map(el => {
+      let amountAxis = binnedOrderbookArr.map(el => {
         return parseFloat(el[1])
       })
       commit({
         type: 'updateDepthPrice',
-        dataArr: priceAxis,
+        payload: priceAxis,
       })
       commit({
         type: 'updateDepthAmount',
-        dataArr: amountAxis,
+        payload: amountAxis,
       })
     },
   },
