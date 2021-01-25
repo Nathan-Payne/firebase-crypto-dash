@@ -1,4 +1,9 @@
 import tickerUpdater from '../../utils/tickerUpdater'
+import { sortArrayColumnDesc } from '../../utils/sorting'
+import {
+  createBinnedOrderbook,
+  updateBinnedOrderbook,
+} from '../../utils/orderbook'
 
 export default {
   state: {},
@@ -6,10 +11,9 @@ export default {
   mutations: {},
   actions: {
     async callBinanceSocket(
-      { commit, dispatch, rootState },
+      { commit, dispatch, rootState, rootGetters },
       { chartInterval }
     ) {
-      //https://binance-docs.github.io/apidocs/spot/en/#individual-symbol-ticker-streams for data format
       let initialiseCount = 0
       let allRequestedTickers = [
         ...rootState.allUsdtTickers,
@@ -17,7 +21,7 @@ export default {
       ]
 
       const socket = await new WebSocket(
-        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcbtc@ticker/ethbtc@ticker/linkbtc@ticker/adabtc@ticker/btcusdt@kline_${chartInterval}`
+        `wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker/linkusdt@ticker/adausdt@ticker/btcbtc@ticker/ethbtc@ticker/linkbtc@ticker/adabtc@ticker/btcusdt@depth/btcusdt@kline_${chartInterval}`
       )
 
       socket.onmessage = event => {
@@ -34,36 +38,75 @@ export default {
         })
 
         if (parsedData.stream == 'btcusdt@depth') {
-          // REALTIME ORDERBOOK DATA UPDATE
-          // let orderbookChanges = [...parsedData.data.a, ...parsedData.data.b]
-          // // ensure data recorded by websocket before REST API doesn't affect orderbook
-          // // if (parsedData.data.u > depthSnapshot.data.lastUpdateId) {
-          // //   // loop over orderbookChanges, use change[0] ('price') to find matching price in fullOrderbook
-          // //   orderbookChanges.forEach(change => {
-          // //     let foundLevelIndex = fullOrderbook.findIndex(
-          // //       level => level[0] === change[0]
-          // //     )
-          // //     // limiting number of levels processed
-          // //     // if (+change[0] > btcPrice + 1000) {
-          // //     //   console.log('outside', +change[0])
-          // //     // }
-          // //     // if (+change[0] < btcPrice - 1000) {
-          // //     //   console.log('outside below', +change[0])
-          // //     // }
-          // //     // if found: replace matchedPrice[1] ('amount) with change[1];
-          // //     // if not found: add new pricelevel to fullOrderbook
-          // //     // if (foundLevelIndex !== -1 && change[1] === '0.00000000') {
-          // //     //   fullOrderbook.splice(foundLevelIndex, 1)
-          // //     // }
-          // //     if (foundLevelIndex !== -1 && change[1] !== '0.00000000') {
-          // //       fullOrderbook[foundLevelIndex][1] = change[1]
-          // //     } else {
-          // //       fullOrderbook.push(change)
-          // //     }
-          // //   })
-          // //   //fullOrderbook.sort(sortArrayColumnAsc)
-          // // }
+          // REALTIME ORDERBOOK UPDATE
+          let orderbookChangesArr = [...parsedData.data.a, ...parsedData.data.b]
+          // ensure data recorded by websocket before REST API doesn't affect orderbook
+          if (parsedData.data.u > rootState.orderbookSnapshot.depthSnapshotId) {
+            let orderbookObj = rootState.orderbookSnapshot.orderbookObj
+
+            let orderbookChanges = orderbookChangesArr.reduce(
+              (obj, [level, price]) => {
+                obj[level] = +price
+                return obj
+              },
+              {}
+            )
+
+            for (let level in orderbookChanges) {
+              if (
+                level > rootGetters.getBtcPrice + 1000 ||
+                level < rootGetters.getBtcPrice - 1000
+              ) {
+                continue // skip iteration if level outside shown price range
+              } else if (level in orderbookObj) {
+                // level IN orderbook
+                if (orderbookChanges[level] === 0.0) {
+                  delete orderbookObj[level] // remove level if 0
+                } else {
+                  orderbookObj[level] = orderbookChanges[level] // replace level value
+                }
+              } else {
+                // level NOT in orderbook
+                if (orderbookChanges[level] === 0.0) {
+                  continue // edge case of 0 values being added to previous undefined levels
+                } else {
+                  orderbookObj[level] = orderbookChanges[level]
+                }
+              }
+            }
+
+            const initBinnedOrderbookObj = createBinnedOrderbook(
+              rootState.orderbookSnapshot.orderbookBinSize,
+              rootGetters.getBtcPrice
+            )
+
+            let updatedBinnedOrderbookObj = updateBinnedOrderbook(
+              orderbookObj,
+              initBinnedOrderbookObj,
+              rootState.orderbookSnapshot.orderbookBinSize
+            )
+
+            // conversion back to array format for graph library
+            let binnedOrderbookArr = Object.entries(updatedBinnedOrderbookObj) // returns [[key, val], [key, val], ...]
+            binnedOrderbookArr.sort(sortArrayColumnDesc)
+
+            let priceAxis = binnedOrderbookArr.map(level => {
+              return parseFloat(level[0])
+            })
+            let amountAxis = binnedOrderbookArr.map(level => {
+              return parseFloat(level[1])
+            })
+            commit({
+              type: 'updateDepthPrice',
+              payload: priceAxis,
+            })
+            commit({
+              type: 'updateDepthAmount',
+              payload: amountAxis,
+            })
+          }
         }
+
         // Live candlestick data for current candle
         if (parsedData.stream == `btcusdt@kline_${chartInterval}`) {
           const candle = parsedData.data.k

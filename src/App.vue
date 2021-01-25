@@ -71,13 +71,18 @@ export default {
     showMenu: false,
   }),
   methods: {
-    ...mapActions(['initTickers', 'callBinanceSocket', 'getCandlestickData']),
+    ...mapActions([
+      'initTickers',
+      'callBinanceSocket',
+      'getCandlestickData',
+      'getOrderbookSnapshot', //dispatched from within websocket
+    ]),
   },
   created() {
     let chartInterval = this.$store.getters.getChartInterval
     this.initTickers() //generates all ticker formats from data object in state
-    this.$store.dispatch('callBinanceSocket', { chartInterval }) //orderbook dispatched once btcPrice streaming
-    this.$store.dispatch('getCandlestickData', { interval: chartInterval }) //gets Kline data from REST api
+    this.callBinanceSocket({ chartInterval }) //orderbook dispatched once btcPrice streaming
+    this.getCandlestickData({ interval: chartInterval }) //gets Kline data from REST api
   },
 }
 </script>

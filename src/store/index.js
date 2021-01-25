@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import initTickers from './modules/initTickers'
-import orderbookSnapshot from './modules/orderbook'
+import orderbookSnapshot from './modules/orderbookSnapshot'
 import historicalCandlesticks from './modules/historicalCandlesticks'
 import websocketStream from './modules/websocketStream'
 
